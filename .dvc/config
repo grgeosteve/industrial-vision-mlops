@@ -1,0 +1,7 @@
+[core]
+    remote = origin
+    analytics = false
+['remote "origin"']
+    url = s3://industrial-vision-mlops
+    endpointurl = https://dagshub.com/api/v1/repo-buckets/s3/grgeosteve
+    region = us-east-1
