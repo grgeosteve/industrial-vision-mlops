@@ -1,0 +1,6 @@
+-r requirements-base.txt
+pytest==9.0.3
+responses==0.26.0
+mypy==2.0.0
+types-requests==2.33.0.20260508
+types-PyYAML==6.0.12.20260508

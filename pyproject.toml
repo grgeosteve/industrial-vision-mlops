@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=82.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "industrial-vision-mlops"
+version = "0.1.0"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.mypy]
+explicit_package_bases = true
+namespace_packages = true
+
+# Strictness Flags
+disallow_untyped_defs = true    # Forces all function to have type hints
+check_untyped_defs = true       # Checks the body of untyped functions
+warn_redundant_casts = true
+warn_unused_ignores = true      # Prevents leaving stale # type: ignore comments
+warn_return_any = true          # Prevents returning 'Any' when a type is expected
+
+# Third-party overrides
+[[tool.mypy.overrides]]
+module = [
+    "yaml.*",
+    "tqdm.*",
+    "mlflow.*",
+    "dagshub.*"
+]
+ignore_missing_imports = true
