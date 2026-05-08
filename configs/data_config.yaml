@@ -1,0 +1,29 @@
+datasets:
+  loco:
+    type: "object_detection"
+    format: "coco"
+    archives:
+      dataset.zip: "https://go.mytum.de/239870"
+
+    metadata_urls:
+      loco-sub1-v1-val.json: "https://raw.githubusercontent.com/tum-fml/loco/refs/heads/main/rgb/loco-sub1-v1-val.json"
+      loco-sub2-v1-train.json: "https://raw.githubusercontent.com/tum-fml/loco/refs/heads/main/rgb/loco-sub2-v1-train.json"
+      loco-sub3-v1-train.json: "https://raw.githubusercontent.com/tum-fml/loco/refs/heads/main/rgb/loco-sub3-v1-train.json"
+      loco-sub4-v1-val.json: "https://raw.githubusercontent.com/tum-fml/loco/refs/heads/main/rgb/loco-sub4-v1-val.json"
+      loco-sub5-v1-train.json: "https://raw.githubusercontent.com/tum-fml/loco/refs/heads/main/rgb/loco-sub5-v1-train.json"
+
+    annotations:
+      - "loco-sub1-v1-val.json"
+      - "loco-sub2-v1-train.json"
+      - "loco-sub3-v1-train.json"
+      - "loco-sub4-v1-val.json"
+      - "loco-sub5-v1-train.json"
+
+    splits:
+      train:
+        - loco-sub2-v1-train.json
+        - loco-sub3-v1-train.json
+        - loco-sub5-v1-train.json
+      val:
+        - loco-sub1-v1-val.json
+        - loco-sub4-v1-val.json
