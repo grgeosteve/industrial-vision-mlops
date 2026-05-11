@@ -175,3 +175,99 @@ def test_tar_path_traversal_rejection(tmp_path: Path) -> None:
 
     with pytest.raises(PermissionError, match="Unsafe path detected in TAR archive"):
         file_ops.extract_archive(archive_path, extract_path)
+
+def test_load_json_config_valid(tmp_path: Path) -> None:
+    """Test that load_json_config correctly loads a valid JSON file."""
+
+    config_data = {"dataset": "coco", "classes": [1, 2, 3]}
+    config_path = tmp_path / "config.json"
+    config_path.write_text('{"dataset": "coco", "classes": [1, 2, 3]}')
+
+    loaded_config = file_ops.load_json_config(config_path)
+    assert loaded_config == config_data
+
+def test_load_json_config_list(tmp_path: Path) -> None:
+    """Test that load_json_config correctly loads a JSON file containing a list."""
+
+    config_data = [1, 2, 3]
+    config_path = tmp_path / "config.json"
+    config_path.write_text('[1, 2, 3]')
+
+    loaded_config = file_ops.load_json_config(config_path)
+    assert loaded_config == config_data
+
+def test_load_json_config_wrong_type(tmp_path: Path) -> None:
+    """Test that load_json_config raises an error if the JSON is not a dict or list."""
+
+    config_path_string = tmp_path / "wrong_type_config_string.json"
+    config_path_string.write_text('"This is a string, not a dict or list"')
+
+    config_path_number = tmp_path / "wrong_type_config_number.json"
+    config_path_number.write_text('42')
+
+    with pytest.raises(ValueError, match="Invalid JSON format in file"):
+        file_ops.load_json_config(config_path_string)
+    with pytest.raises(ValueError, match="Invalid JSON format in file"):
+        file_ops.load_json_config(config_path_number)
+
+def test_load_json_config_invalid_json(tmp_path: Path) -> None:
+    """Test that load_json_config raises an error for invalid JSON format."""
+
+    config_path = tmp_path / "invalid.json"
+    config_path.write_text('{"key": "value",}')  # Invalid JSON due to trailing comma
+
+    with pytest.raises(ValueError, match="Invalid JSON format in file"):
+        file_ops.load_json_config(config_path)
+
+def test_load_json_config_nonexistent_file(tmp_path: Path) -> None:
+    """Test that load_json_config raises an error when the file does not exist."""
+
+    config_path = tmp_path / "nonexistent.json"
+
+    with pytest.raises(FileNotFoundError):
+        file_ops.load_json_config(config_path)
+
+def test_load_yaml_config_valid(tmp_path: Path) -> None:
+    """Test that load_yaml_config correctly loads a valid YAML file."""
+
+    config_data = {"dataset": "coco", "classes": [1, 2, 3]}
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text('dataset: coco\nclasses:\n  - 1\n  - 2\n  - 3\n')
+
+    loaded_config = file_ops.load_yaml_config(config_path)
+    assert loaded_config == config_data
+
+def test_load_yaml_config_file_not_found(tmp_path: Path) -> None:
+    """Test that load_yaml_config raises an error when the file does not exist."""
+
+    config_path = tmp_path / "nonexistent.yaml"
+
+    with pytest.raises(FileNotFoundError):
+        file_ops.load_yaml_config(config_path)
+
+def test_load_yaml_config_invalid_yaml(tmp_path: Path) -> None:
+    """Test that load_yaml_config raises an error for invalid YAML format."""
+
+    config_path = tmp_path / "invalid.yaml"
+    config_path.write_text("dataset: [loco\n- malformed")
+
+    with pytest.raises(ValueError, match="Error parsing YAML configuration file"):
+        file_ops.load_yaml_config(config_path)
+
+def test_load_yaml_config_not_a_dict(tmp_path: Path) -> None:
+    """Test that load_yaml_config raises an error if the YAML does not contain a dict."""
+
+    config_path = tmp_path / "not_a_dict.yaml"
+    config_path.write_text('- item1\n- item2\n- item3\n')  # This is a list, not a dict
+
+    with pytest.raises(ValueError, match="Invalid YAML configuration format in file"):
+        file_ops.load_yaml_config(config_path)
+
+def test_load_yaml_config_empty_file(tmp_path: Path) -> None:
+    """Test that load_yaml_config raises an error for an empty YAML file."""
+
+    config_path = tmp_path / "empty.yaml"
+    config_path.write_text('')  # Empty file
+
+    with pytest.raises(ValueError, match="Invalid YAML configuration format in file"):
+        file_ops.load_yaml_config(config_path)
