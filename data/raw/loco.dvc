@@ -1,0 +1,6 @@
+outs:
+- md5: 2b4fe0391c15bfe892d9a3c944d5b729.dir
+  size: 873727636
+  nfiles: 5598
+  hash: md5
+  path: loco
