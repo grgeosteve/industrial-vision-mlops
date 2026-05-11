@@ -96,19 +96,35 @@ This project separates the ML lifecycle into strictly versioned phases:
     ./init_mlops.sh
     ```
 
-## Stage 2: Data Processing
-1. **Download and ingest the raw dataset**
+## Stage 2: Data Acquisition & Processing
+### Data Retrieval (Default)
+Because the raw data is version-controlled as an immutable artifact, you do not need to download it manually. Once your `.env` and DagsHub remote are configured via `init_mlops.sh`, simply pull the data:
 
-    Download the LOCO dataset.
-    *Credits to the TUM team for creating and supplying the dataset in their repository: https://github.com/tum-fml/loco*
+```bash
+    dvc pull
+```
 
-    >LOCO: Logistics Objects in Context    
-    >Mayershofer, C., Holm, D.-M., Molter, B., Fottner, J.     
-    >IEEE International Conference on Machine Learning and Applications (ICMLA) 2020
+### Manual Data Ingestion (Admin Only)
+*If you are updating the dataset or rebuilding the DVC pipeline from scratch, you can trigger the raw ingestion script. This downloads the LOCO dataset directly from the TUM servers.*
 
-    ```bash
+*Credits to the TUM team for creating and supplying the dataset in their repository:* https://github.com/tum-fml/loco
+
+>LOCO: Logistics Objects in Context    
+>Mayershofer, C., Holm, D.-M., Molter, B., Fottner, J.     
+>IEEE International Conference on Machine Learning and Applications (ICMLA) 2020
+
+```bash
     python src/data/ingest_data.py --dataset loco --config configs/data_config.yaml
-    ```
+```
+
+### Exploratory Data Analysis (EDA)
+All exploratory notebooks are isolated in the `notebooks/` directory to prevent environment pollution. To run the EDA notebooks, ensure you have installed the development dependencies using `requirements-base-dev.txt`.
+
+From within the conda environment launch `marimo`:
+
+```bash
+    marimo edit notebooks/01_EDA_raw_loco.py
+```
 
 ## Testing
 Unit and pipeline integration tests have been built to verify the correct execution of the utility functions, API integration, and processing logic.
