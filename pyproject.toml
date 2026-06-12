@@ -5,11 +5,41 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "industrial-vision-mlops"
 version = "0.1.0"
+requires-python = ">=3.11"
 dependencies = []
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["src*"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort import sorting
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "PL",  # pylint
+]
+
+[tool.ruff.lint.pylint]
+# Idiomatic string comparisons (split names, format identifiers) are not magic values
+allow-magic-value-types = ["str"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/validators/*" = [
+    "E501",    # Long lines: validator error messages are intentionally descriptive
+    "PLR0912", # Too many branches: sequential validation checks are long by design
+    "PLR0915", # Too many statements: sequential validation checks are long by design
+    "PLR2004", # Magic value comparisons: COCO format constants (e.g. bbox length of 4)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
 
 [tool.mypy]
 explicit_package_bases = true

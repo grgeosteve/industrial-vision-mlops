@@ -5,6 +5,9 @@ mypy==2.0.0
 types-requests==2.33.0.20260508
 types-PyYAML==6.0.12.20260508
 
+# Linting and import sorting
+ruff==0.15.17
+
 # Exploratory Data Analysis
 marimo==0.23.5
 opencv-python==4.13.0.92
