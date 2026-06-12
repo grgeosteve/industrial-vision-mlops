@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 def _get_project_root() -> Path:
     """Get the project root directory."""
 
@@ -19,3 +20,4 @@ EXTERNAL_DATA_DIR = DATA_DIR / "external"
 RAW_DATA_DIR = DATA_DIR / "raw"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 CONFIG_DIR = PROJECT_ROOT / "configs"
+LOGS_DIR = PROJECT_ROOT / "logs"
