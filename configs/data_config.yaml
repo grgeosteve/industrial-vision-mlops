@@ -1,9 +1,16 @@
 datasets:
   loco:
+    name: "LOCO"
     type: "object_detection"
     format: "coco"
     archives:
       dataset.zip: "https://go.mytum.de/239870"
+
+    # Relative extracted data path
+    path: "dataset"
+
+    # (Optional) relative directory path for annotations in the raw folder
+    annotations_path: "annotations"
 
     metadata_urls:
       loco-sub1-v1-val.json: "https://raw.githubusercontent.com/tum-fml/loco/refs/heads/main/rgb/loco-sub1-v1-val.json"
@@ -27,3 +34,21 @@ datasets:
       val:
         - loco-sub1-v1-val.json
         - loco-sub4-v1-val.json
+
+    # Explicit class mapping
+    classes:
+      small_load_carrier:
+        coco_id: 3
+        yolo_id: 0
+      forklift:
+        coco_id: 5
+        yolo_id: 1
+      pallet:
+        coco_id: 7
+        yolo_id: 2
+      stillage:
+        coco_id: 10
+        yolo_id: 3
+      pallet_truck:
+        coco_id: 11
+        yolo_id: 4
