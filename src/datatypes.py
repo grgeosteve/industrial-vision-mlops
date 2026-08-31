@@ -30,3 +30,12 @@ class DatasetConfigModel(BaseModel):
     type: str
     format: str
     name: str
+
+class CocoDocument(BaseModel):
+    """
+    Top level structural contract for a COCO annotation file
+    """
+    model_config = {"extra": "allow"}
+    images: list[dict[str, Any]]
+    categories: list[dict[str, Any]]
+    annotations: list[dict[str, Any]] = []  # Key may be absent for test splits; null is rejected
