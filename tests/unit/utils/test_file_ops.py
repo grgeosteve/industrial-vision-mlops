@@ -1,10 +1,13 @@
 import io
-import zipfile
 import tarfile
+import zipfile
 from pathlib import Path
+
 import pytest
 import responses
+
 from src.utils import file_ops
+
 
 def test_is_safe_path() -> None:
     """Test the is_safe_path function for various path scenarios."""
@@ -19,15 +22,16 @@ def test_download_data(tmp_path: Path) -> None:
 
     url = "http://example.com/dataset.zip"
     dest = tmp_path / "dataset.zip"
+    payload = b"fake_archive_data"
 
     # Intercept the HTTP request and return a fake response
-    responses.add(responses.GET, url, body=b"fake_archive_data", status=200)
+    responses.add(responses.GET, url, body=payload, status=200)
 
     file_ops.download_data(url, dest)
 
     # Assert the file was written to the temporary directory
     assert dest.exists()
-    assert dest.read_bytes() == b"fake_archive_data"
+    assert dest.read_bytes() == payload
 
 def test_extract_archive_zip(tmp_path: Path) -> None:
     """Test the extract_archive function with a sample zip file."""
@@ -144,7 +148,7 @@ def test_tar_symlink_rejection(tmp_path: Path) -> None:
         tarinfo.type = tarfile.SYMTYPE
 
         # Point the symlink to a sandbox forbidden file
-        tarinfo.linkname = str(forbidden_target) 
+        tarinfo.linkname = str(forbidden_target)
         tar.addfile(tarinfo)
 
     with pytest.raises(PermissionError, match="Symbolic links are not allowed in TAR archives"):
