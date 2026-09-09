@@ -1,0 +1,58 @@
+schema: '2.0'
+stages:
+  process_loco:
+    cmd: python -m src.data.process_dataset --dataset loco --config 
+      configs/data_config.yaml
+    deps:
+    - path: configs/data_config.yaml
+      hash: md5
+      md5: 8e1b95209af7b4d3997b339d90d6c231
+      size: 1659
+    - path: data/raw/loco
+      hash: md5
+      md5: 2b4fe0391c15bfe892d9a3c944d5b729.dir
+      size: 873727636
+      nfiles: 5598
+    - path: src/converters
+      hash: md5
+      md5: e002de7e272e6a28ef25d3bcde5c73d1.dir
+      size: 11048
+      nfiles: 3
+    - path: src/data/process_dataset.py
+      hash: md5
+      md5: 533d9f26a47578e6d610366544132104
+      size: 9263
+    - path: src/datatypes.py
+      hash: md5
+      md5: 91982cc00fb271167d2fb2f82e87c982
+      size: 1122
+    - path: src/handlers
+      hash: md5
+      md5: 9fb09f2d582c39d4931c72f5bd84ea4c.dir
+      size: 4721
+      nfiles: 3
+    - path: src/paths.py
+      hash: md5
+      md5: cc0c0ce7efaf710d871c07707016de0c
+      size: 675
+    - path: src/utils
+      hash: md5
+      md5: c986f61ca1b217fe664d520acb93b3b0.dir
+      size: 6047
+      nfiles: 3
+    - path: src/validators
+      hash: md5
+      md5: d079a60d0b5a80ad7082070a89393fca.dir
+      size: 35025
+      nfiles: 3
+    - path: src/writers
+      hash: md5
+      md5: ce086b4e061369b402b895874d3bdf4d.dir
+      size: 9033
+      nfiles: 3
+    outs:
+    - path: data/processed/loco
+      hash: md5
+      md5: 46e8946743354a60b5a1660e3ecb9da3.dir
+      size: 714583972
+      nfiles: 10195

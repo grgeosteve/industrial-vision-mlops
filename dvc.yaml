@@ -1,0 +1,17 @@
+stages:
+  process_loco:
+    cmd: python -m src.data.process_dataset --dataset loco --config configs/data_config.yaml
+    deps:
+      - configs/data_config.yaml
+      - data/raw/loco
+      # Import dependencies of process_dataset.
+      - src/converters
+      - src/data/process_dataset.py
+      - src/datatypes.py
+      - src/handlers
+      - src/paths.py
+      - src/utils
+      - src/validators
+      - src/writers
+    outs:
+      - data/processed/loco
