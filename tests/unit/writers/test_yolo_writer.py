@@ -13,13 +13,14 @@ from src.utils.file_ops import load_yaml_config
 from src.writers.yolo_writer import YoloWriter
 
 IMAGE_BYTES = b"fake-image-bytes"
+DATASET_DIRNAME = "loco"
 MakeWriter: TypeAlias = Callable[..., YoloWriter]
 
 
 @pytest.fixture
 def make_writer(tmp_path: Path) -> MakeWriter:
     def _make(class_mapping: ClassConfigMapping | None = None) -> YoloWriter:
-        return YoloWriter(tmp_path, class_mapping or {
+        return YoloWriter(tmp_path / DATASET_DIRNAME, class_mapping or {
             "forklift": {"coco_id": 5, "yolo_id": 0},
             "pallet": {"coco_id": 7, "yolo_id": 1},
         })
@@ -107,6 +108,7 @@ def test_setup_split_invalid_name_raises(make_writer: MakeWriter, split_name: st
 def test_setup_split_directory_failure_raises(make_writer: MakeWriter,
                                               caplog: pytest.LogCaptureFixture) -> None:
     w = make_writer()
+    w.output_dir.mkdir()
 
     # A file where the images directory must go, so mkdir cannot create it.
     (w.output_dir / "images").write_text("not a directory")
@@ -280,7 +282,7 @@ def test_finalise_writes_dataset_yaml(make_writer: MakeWriter, source_image: Pat
     config = load_yaml_config(w.output_dir / "dataset.yaml")
 
     assert config == {
-        "path": str(w.output_dir.resolve()),
+        "path": DATASET_DIRNAME,
         "names": {0: "forklift", 1: "pallet"},
         "train": "images/train",
         "val": "images/val",
@@ -301,7 +303,7 @@ def test_finalise_omits_absent_splits(make_writer: MakeWriter, source_image: Pat
     config = load_yaml_config(w.output_dir / "dataset.yaml")
 
     assert config == {
-        "path": str(w.output_dir.resolve()),
+        "path": DATASET_DIRNAME,
         "names": {0: "forklift", 1: "pallet"},
         "train": "images/train",
     }

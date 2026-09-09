@@ -160,9 +160,11 @@ class YoloWriter(BaseDatasetWriter):
         if 'train' not in splits_present:
             raise RuntimeError("Dataset integrity check failed: No 'train' split provided. Training is not possible.")
 
-        # Construct the YOLO config dictionary
+        # Construct the YOLO config dictionary. 'path' is the dataset directory name, as
+        # in Ultralytics' own documentation. An absolute path would tie this file, and
+        # so DVC output hash to a single checkout.
         dataset_config = {
-            'path': str(self.output_dir.resolve()),
+            'path': self.output_dir.name,
             'names': self.classes,
         }
         for split in ('train', 'val', 'test'):

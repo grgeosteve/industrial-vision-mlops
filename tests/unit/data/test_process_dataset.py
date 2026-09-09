@@ -312,7 +312,7 @@ def test_process_dataset_writes_dataset_yaml(config_file: WriteConfigFile,
 
     config = file_ops.load_yaml_config(processed_config_path)
     assert config == {
-        "path": str(processed_dir.resolve()),
+        "path": DATASET_NAME,
         "names": dict(enumerate(CLASS_NAMES)),
         "train": "images/train",
         "val": "images/val",
