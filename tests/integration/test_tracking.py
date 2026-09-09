@@ -1,8 +1,11 @@
 import os
-import mlflow
+
 import dagshub
+import mlflow
 from dotenv import load_dotenv
+
 from src import paths
+
 
 def test_mlflow_dagshub_connection() -> None:
     # Load environment variables from .env file

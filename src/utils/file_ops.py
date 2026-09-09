@@ -1,10 +1,11 @@
+import json
 import logging
-from pathlib import Path
-from typing import Any
-import requests
 import tarfile
 import zipfile
-import json
+from pathlib import Path
+from typing import Any
+
+import requests
 import yaml
 from tqdm import tqdm
 
@@ -23,7 +24,7 @@ def load_yaml_config(config_path: str | Path) -> dict[str, Any]:
     config_path = Path(config_path).resolve()
 
     try:
-        with open(config_path, 'r', encoding='utf-8') as f:
+        with open(config_path, encoding='utf-8') as f:
             config = yaml.safe_load(f)
 
         if not isinstance(config, dict):
@@ -50,7 +51,7 @@ def load_json_config(file_path: str | Path) -> dict[str, Any] | list[Any]:
 
     file_path = Path(file_path).resolve()
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             config = json.load(f)
 
         if not isinstance(config, (dict, list)):

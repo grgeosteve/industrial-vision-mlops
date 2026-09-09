@@ -1,7 +1,10 @@
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import pytest
-from src.data.ingest_data import ingest_data 
+
+from src.data.ingest_data import ingest_data
+
 
 @pytest.fixture
 def mock_config() -> dict:
@@ -35,9 +38,9 @@ def test_ingest_data(mock_paths: MagicMock,
     """Test the ingest_data function with a mocked configuration."""
 
     # Setup mock paths
-    mock_paths.EXTERNAL_DATA_DIR = tmp_path / "external" 
+    mock_paths.EXTERNAL_DATA_DIR = tmp_path / "external"
     mock_paths.RAW_DATA_DIR = tmp_path / "raw"
-    mock_paths.CONFIG_DIR = tmp_path / "configs" 
+    mock_paths.CONFIG_DIR = tmp_path / "configs"
 
     # Mock the load_yaml_config to return our test config
     mock_file_ops.load_yaml_config.return_value = mock_config

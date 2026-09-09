@@ -1,7 +1,8 @@
 import argparse
 import logging
-from pathlib import Path
 import shutil
+import sys
+from pathlib import Path
 
 from src import paths
 from src.utils import file_ops
@@ -15,7 +16,7 @@ def ingest_data(dataset_name: str, config_path: str | Path) -> None:
     full_config = file_ops.load_yaml_config(config_path)
     if 'datasets' not in full_config or dataset_name not in full_config['datasets']:
         raise ValueError(f"Dataset '{dataset_name}' not found in configuration.")
-    
+
     dataset_config = full_config['datasets'][dataset_name]
 
     # Path resolution and directory setup
@@ -29,7 +30,7 @@ def ingest_data(dataset_name: str, config_path: str | Path) -> None:
     archives = dataset_config.get("archives", {})
     if not archives:
         raise ValueError("No archives defined in the configuration.")
-    
+
     for filename, url in archives.items():
         # Download the archive file
         archive_path = external_data_dir / filename
@@ -87,7 +88,7 @@ def main() -> None:
         logger.info(f"Data ingestion completed successfully for dataset '{args.dataset}'.")
     except Exception:
         logger.exception(f"Pipeline failed while ingesting data for dataset '{args.dataset}'")
-        exit(1)
+        sys.exit(1)
 
 if __name__ == "__main__":
     # Configure basic logging
