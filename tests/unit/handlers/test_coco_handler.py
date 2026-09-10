@@ -169,7 +169,7 @@ def test_process_split_non_json_filename_raises(make_handler: MakeHandler, write
         list(handler.process_split("train"))
 
 def test_process_split_missing_file_raises(make_handler: MakeHandler) -> None:
-    with pytest.raises(ValueError, match="does not exist"):
+    with pytest.raises(FileNotFoundError, match="does not exist"):
         list(make_handler().process_split("train"))
 
 def test_process_split_invalid_coco_document_raises(make_handler: MakeHandler, write_anno: WriteAnno) -> None:

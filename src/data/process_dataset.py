@@ -93,7 +93,8 @@ def process_dataset(dataset_name: str, config_path: Path, target_format: str, ov
     Raises:
         ValueError: If the dataset is not present in the configuration file.
         ValueError: If the dataset configuration is invalid.
-        FileNotFoundError: If the raw data directory or a source image does not exist.
+        FileNotFoundError: If the configuration file, the raw data directory, an annotation file,
+            or a source image does not exist.
         PermissionError: If a source image or an output file cannot be accessed.
         NotImplementedError: If the dataset format, type, and target format combination is not supported.
         FileExistsError: If the processed dataset already exists and overwrite is not set.

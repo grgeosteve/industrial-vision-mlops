@@ -3,7 +3,7 @@ from collections.abc import Iterator
 
 from pydantic import ValidationError
 
-from src.datatypes import CocoDocument
+from src.datatypes import SPLIT_NAMES, CocoDocument
 from src.handlers.base_handler import BaseFormatHandler
 from src.utils import file_ops
 
@@ -23,7 +23,7 @@ class CocoFormatHandler(BaseFormatHandler):
             ValueError: If a mandatory split is missing.
         """
         split_config = self.dataset_config.splits
-        all_allowed_splits = {'train', 'val', 'test'}
+        all_allowed_splits = set(SPLIT_NAMES)
 
         extracted_splits = list(split_config.keys())
         extracted_set = set(extracted_splits)
@@ -50,7 +50,8 @@ class CocoFormatHandler(BaseFormatHandler):
 
         Raises:
             ValueError: If the split does not appear in the dataset configuration file.
-            ValueError: If annotation file is not a JSON file or it doesn't exist.
+            ValueError: If annotation file is not a JSON file.
+            FileNotFoundError: If the annotation file does not exist.
             ValueError: If the annotation file is not a valid COCO document.
             ValueError: If a non-test split has no annotations.
         """
@@ -73,7 +74,7 @@ class CocoFormatHandler(BaseFormatHandler):
                 raise ValueError("Only JSON annotations are supported for COCO format.")
 
             if not config_path.exists():
-                raise ValueError(f"Annotation file {config_path} does not exist")
+                raise FileNotFoundError(f"Annotation file {config_path} does not exist")
 
             # Get annotation data
             anno_data = file_ops.load_json_config(config_path)

@@ -16,6 +16,9 @@ SplitConfig: TypeAlias = dict[str, list[str] | str]
 DatasetConfig: TypeAlias = dict[str, Any]
 DatasetConfigs: TypeAlias = dict[str, DatasetConfig]
 
+# Centralised approved split name list
+SPLIT_NAMES: tuple[str, ...] = ("train", "val", "test")
+
 class DatasetConfigModel(BaseModel):
     """
     Validates the DatasetConfig dictionary contains the necessary keys

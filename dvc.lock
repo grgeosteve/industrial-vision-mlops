@@ -20,16 +20,16 @@ stages:
       nfiles: 3
     - path: src/data/process_dataset.py
       hash: md5
-      md5: 533d9f26a47578e6d610366544132104
-      size: 9263
+      md5: 34ac087968ac822d20fd07f20b39020c
+      size: 9320
     - path: src/datatypes.py
       hash: md5
-      md5: 91982cc00fb271167d2fb2f82e87c982
-      size: 1122
+      md5: 52d6ee89a93ba2e7941b9566e400aef2
+      size: 1218
     - path: src/handlers
       hash: md5
-      md5: 9fb09f2d582c39d4931c72f5bd84ea4c.dir
-      size: 4721
+      md5: 4591b445808b187927b2ab1c8b2edfba.dir
+      size: 4783
       nfiles: 3
     - path: src/paths.py
       hash: md5
@@ -47,8 +47,8 @@ stages:
       nfiles: 3
     - path: src/writers
       hash: md5
-      md5: ce086b4e061369b402b895874d3bdf4d.dir
-      size: 9033
+      md5: 10b1c7ed5db9241de84cde94ff7324af.dir
+      size: 9091
       nfiles: 3
     outs:
     - path: data/processed/loco

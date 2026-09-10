@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from src.datatypes import ClassConfigMapping
+from src.datatypes import SPLIT_NAMES, ClassConfigMapping
 from src.writers.base_writer import BaseDatasetWriter
 
 logger = logging.getLogger(__name__)
@@ -36,8 +36,9 @@ class YoloWriter(BaseDatasetWriter):
             ValueError: If the split name is invalid.
             RuntimeError: If the directory structure cannot be created.
         """
-        if split_name not in ['train', 'val', 'test']:
-            raise ValueError(f"Invalid split name '{split_name}'. Only 'train', 'val', 'test' are allowed.")
+        if split_name not in SPLIT_NAMES:
+            allowed_splits = ", ".join(repr(split) for split in SPLIT_NAMES)
+            raise ValueError(f"Invalid split name '{split_name}'. Only {allowed_splits} are allowed.")
         try:
             image_dir = self.output_dir / 'images' / split_name
             image_dir.mkdir(parents=True, exist_ok=True)
@@ -167,7 +168,7 @@ class YoloWriter(BaseDatasetWriter):
             'path': self.output_dir.name,
             'names': self.classes,
         }
-        for split in ('train', 'val', 'test'):
+        for split in SPLIT_NAMES:
             if split in splits_present:
                 dataset_config[split] = f"images/{split}"
 
