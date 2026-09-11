@@ -15,8 +15,8 @@ stages:
       nfiles: 5598
     - path: src/converters
       hash: md5
-      md5: ccb5e23451634520be4f21a2201cdac8.dir
-      size: 11690
+      md5: 6e700ef46e09622949edb377f8ba80d8.dir
+      size: 11634
       nfiles: 3
     - path: src/data/process_dataset.py
       hash: md5
@@ -24,8 +24,8 @@ stages:
       size: 9360
     - path: src/datatypes.py
       hash: md5
-      md5: 9dee7af421dee0f1f2717de708c77e27
-      size: 1441
+      md5: af86c57ad38276b239f0c70e7d1ed2dd
+      size: 1532
     - path: src/handlers
       hash: md5
       md5: e3984f3e323414045499dfad77e3df64.dir
@@ -42,8 +42,8 @@ stages:
       nfiles: 3
     - path: src/validators
       hash: md5
-      md5: a35139b4de332b515ef4713be233458d.dir
-      size: 40586
+      md5: f00953ef329929d2214c84aca7b8ae3c.dir
+      size: 40590
       nfiles: 3
     - path: src/writers
       hash: md5

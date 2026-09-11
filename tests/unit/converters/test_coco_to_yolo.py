@@ -4,9 +4,8 @@ from typing import Any, TypeAlias
 import pytest
 
 from src.converters.coco_to_yolo import CocoBBoxEntry, CocoToYoloDetectionConverter
-from src.datatypes import ClassConfigMapping
+from src.datatypes import ClassConfigMapping, CocoDict
 
-CocoDict: TypeAlias = dict[str, Any]
 MakeConverter: TypeAlias = Callable[..., CocoToYoloDetectionConverter]
 Mutate: TypeAlias = Callable[[CocoDict], Any]
 

@@ -7,10 +7,9 @@ from typing import Any, TypeAlias
 import pytest
 
 from src.converters.base_converter import BaseAnnotationConverter
-from src.datatypes import DatasetConfigModel, SplitConfig
+from src.datatypes import CocoDict, DatasetConfigModel, SplitConfig
 from src.handlers.coco_handler import CocoFormatHandler
 
-CocoDict: TypeAlias = dict[str, Any]
 MakeHandler: TypeAlias = Callable[..., CocoFormatHandler]
 WriteAnno: TypeAlias = Callable[..., Path]
 

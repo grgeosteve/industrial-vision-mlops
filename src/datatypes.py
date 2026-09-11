@@ -22,6 +22,9 @@ SplitConfig: TypeAlias = dict[str, list[str] | str]
 DatasetConfig: TypeAlias = dict[str, Any]
 DatasetConfigs: TypeAlias = dict[str, DatasetConfig]
 
+# Raw COCO annotation file data, as parsed from JSON
+CocoDict: TypeAlias = dict[str, Any]
+
 # Centralised approved split name list
 SPLIT_NAMES: tuple[str, ...] = ("train", "val", "test")
 

@@ -12,7 +12,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from src.datatypes import CocoDocument
+from src.datatypes import CocoDict, CocoDocument
 from src.utils import coco_ops, file_ops
 from src.validators.base_validator import BaseDatasetValidator
 
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 # Key: Split name
 # Value: Parsed COCO document, keyed by annotation file path
-SplitAnnotations = dict[str, dict[Path, dict[str, Any]]]
+SplitAnnotations = dict[str, dict[Path, CocoDict]]
 
 
 class CocoDatasetValidator(BaseDatasetValidator):
@@ -95,7 +95,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                         errors.append(f"{error_prefix}: Annotation file {anno_fpath} loaded, but returned a {type(anno_data).__name__}. Expected a dict.")
                     else:
                         # Validated for structure only - the raw dict is what the checks consume
-                        _ = CocoDocument(**anno_data)
+                        _ = CocoDocument.model_validate(anno_data)
                         split_annotations[split][anno_fpath] = anno_data
                 except ValidationError as e:
                     errors.append(f"{error_prefix}: JSON file: {anno_fpath} is not a valid COCO annotation file: {e}")
@@ -692,7 +692,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
             overlap = split_image_paths[split].intersection(split_image_paths[other_split])
             if overlap:
                 errors.append(f"{error_prefix}: Error: Data leakage detected between splits {split} and {other_split}. Overlapping images: {overlap}.")
-                logger.warning(f"{logger_prefix}: FATAL ERROR: Data leakage detected between splits {split} and {other_split}. Number of overlapping images: {len(overlap)}.")
+                logger.warning(f"{logger_prefix}: Data leakage detected between splits {split} and {other_split}. Number of overlapping images: {len(overlap)}.")
 
         if len(errors) == 0:
             logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset without errors.")

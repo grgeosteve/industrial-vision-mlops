@@ -9,7 +9,7 @@ import yaml
 
 from src import paths
 from src.data.process_dataset import get_pipeline_components, get_validator, main, process_dataset
-from src.datatypes import ClassConfigMapping, DatasetConfig, DatasetConfigModel, DatasetConfigs
+from src.datatypes import ClassConfigMapping, CocoDict, DatasetConfig, DatasetConfigModel, DatasetConfigs
 from src.handlers.base_handler import BaseFormatHandler
 from src.handlers.coco_handler import CocoFormatHandler
 from src.utils import coco_ops, file_ops
@@ -18,7 +18,6 @@ from src.validators.coco_validator import CocoDatasetValidator
 from src.writers.base_writer import BaseDatasetWriter
 from src.writers.yolo_writer import YoloWriter
 
-CocoDict: TypeAlias = dict[str, Any]
 WriteConfigFile: TypeAlias = Callable[..., Path]
 WriteRawDataset: TypeAlias = Callable[..., Path]
 PipelineComponents: TypeAlias = tuple[type[BaseFormatHandler], type[BaseDatasetWriter]]

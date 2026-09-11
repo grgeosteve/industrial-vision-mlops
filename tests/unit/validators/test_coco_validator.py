@@ -5,11 +5,10 @@ from typing import Any, TypeAlias
 
 import pytest
 
-from src.datatypes import ClassConfigMapping, DatasetConfigModel, SplitConfig
+from src.datatypes import ClassConfigMapping, CocoDict, DatasetConfigModel, SplitConfig
 from src.validators.base_validator import DatasetValidationError
 from src.validators.coco_validator import CocoDatasetValidator, SplitAnnotations
 
-CocoDict: TypeAlias = dict[str, Any]
 MakeValidator: TypeAlias = Callable[..., CocoDatasetValidator]
 Mutate: TypeAlias = Callable[[CocoDict], Any]
 

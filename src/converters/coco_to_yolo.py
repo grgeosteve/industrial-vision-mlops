@@ -11,7 +11,7 @@ from typing import Any
 from pydantic import BaseModel, RootModel, ValidationError
 
 from src.converters.base_converter import BaseAnnotationConverter
-from src.datatypes import ClassConfigMapping
+from src.datatypes import ClassConfigMapping, CocoDict
 from src.utils.coco_ops import resolve_image_relpath
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class ImageBBoxMapping(RootModel):
     """Validates the internal image_bbox_dict mapping."""
     root: dict[int, list[CocoBBoxEntry]]
 
-class CocoToYoloDetectionConverter(BaseAnnotationConverter[dict[str, Any]]):
+class CocoToYoloDetectionConverter(BaseAnnotationConverter[CocoDict]):
     """Converts COCO object detection dictionaries into normalised YOLO strings."""
 
     def __init__(self, class_mapping: ClassConfigMapping) -> None:
@@ -53,11 +53,11 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[dict[str, Any]]):
 
             self.coco_to_yolo[coco_id] = yolo_id
 
-    def _index_images(self, raw_data: dict[str, Any]) -> dict[int, dict[str, Any]]:
+    def _index_images(self, raw_data: CocoDict) -> dict[int, dict[str, Any]]:
         """Indexes every image entry by id, resolving its path and dimensions.
 
         Args:
-            raw_data (dict[str, Any]): Raw COCO annotation file data.
+            raw_data (CocoDict): Raw COCO annotation file data.
 
         Returns:
             dict[int, dict[str, Any]]: Image entries keyed by image id,
@@ -95,12 +95,12 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[dict[str, Any]]):
         return image_dict
 
     def _index_annotations(self,
-                           raw_data: dict[str, Any],
+                           raw_data: CocoDict,
                            image_dict: dict[int, dict[str, Any]]) -> dict[int, list[dict[str, Any]]]:
         """Groups every usable annotation based on its image id.
 
         Args:
-            raw_data (dict[str, Any]): Raw COCO annotation file data.
+            raw_data (CocoDict): Raw COCO annotation file data.
             image_dict (dict[int, dict[str, Any]]): Image entries keyed by image id,
                                                     each with path, height, and width information.
 
@@ -195,11 +195,11 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[dict[str, Any]]):
 
         return formatted_annotations
 
-    def _convert_no_annotations(self, raw_data: dict[str, Any]) -> Iterator[tuple[str, str | None]]:
+    def _convert_no_annotations(self, raw_data: CocoDict) -> Iterator[tuple[str, str | None]]:
         """Yields every image path with no label, for annotation-free file data.
 
         Args:
-            raw_data (dict[str, Any]): Raw COCO annotation file data.
+            raw_data (CocoDict): Raw COCO annotation file data.
 
         Yields:
             tuple[str, str | None]: Image path and None, as there are no annotations to convert.
@@ -208,11 +208,11 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[dict[str, Any]]):
         for image_data in image_dict.values():
             yield image_data['path'], None
 
-    def _convert_annotations(self, raw_data: dict[str, Any]) -> Iterator[tuple[str, str | None]]:
+    def _convert_annotations(self, raw_data: CocoDict) -> Iterator[tuple[str, str | None]]:
         """Yields every image path with its converted YOLO label block.
 
         Args:
-            raw_data (dict[str, Any]): Raw COCO annotation file data.
+            raw_data (CocoDict): Raw COCO annotation file data.
 
         Yields:
             tuple[str, str | None]: Image path and its YOLO label string, or None if the image has no annotations.
@@ -235,11 +235,11 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[dict[str, Any]]):
             else:
                 yield image_data['path'], None
 
-    def convert(self, raw_data: dict[str, Any]) -> Iterator[tuple[str, str | None]]:
+    def convert(self, raw_data: CocoDict) -> Iterator[tuple[str, str | None]]:
         """Converts one COCO annotation file into YOLO image path and label pairs.
 
         Args:
-            raw_data (dict[str, Any]): Raw COCO annotation file data.
+            raw_data (CocoDict): Raw COCO annotation file data.
 
         Yields:
             tuple[str, str | None]: Image path relative to the dataset root, and its YOLO
