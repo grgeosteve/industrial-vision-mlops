@@ -1,3 +1,13 @@
+"""Dataset processing pipeline.
+
+Validates a raw dataset, then routes it through the format handler, converter and writer
+selected for its source format, target format and its type.
+
+Usage example:
+
+    python -m src.data.process_dataset --dataset loco --config configs/data_config.yaml
+"""
+
 import argparse
 import logging
 import shutil
@@ -93,13 +103,9 @@ def process_dataset(dataset_name: str, config_path: Path, target_format: str, ov
     Raises:
         ValueError: If the dataset is not present in the configuration file.
         ValueError: If the dataset configuration is invalid.
-        FileNotFoundError: If the configuration file, the raw data directory, an annotation file,
-            or a source image does not exist.
-        PermissionError: If a source image or an output file cannot be accessed.
-        NotImplementedError: If the dataset format, type, and target format combination is not supported.
+        FileNotFoundError: If the raw data directory does not exist.
         FileExistsError: If the processed dataset already exists and overwrite is not set.
         DatasetValidationError: If the dataset fails pre-flight validation.
-        RuntimeError: If the writer cannot create, populate, or finalise the output dataset.
     """
     logger.info(f"Initiating processing pipeline for dataset: {dataset_name}")
 
@@ -171,7 +177,11 @@ def process_dataset(dataset_name: str, config_path: Path, target_format: str, ov
     logger.info(f"Processed data is located at: {writer.output_dir}")
 
 def main() -> None:
-    """Parses the command line arguments and runs the dataset processing pipeline."""
+    """Parses the command line arguments and runs the dataset processing pipeline.
+
+    Raises:
+        Exception: Any error raised in the pipeline, logged and re-raised unchanged.
+    """
     default_config_path = paths.CONFIG_DIR / "data_config.yaml"
 
     parser = argparse.ArgumentParser(description="Process a dataset.")

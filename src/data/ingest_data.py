@@ -1,3 +1,10 @@
+"""Dataset ingestion: downloads source archives and stages them under data/raw.
+
+Usage example:
+
+    python -m src.data.ingest_data --dataset loco --config configs/data_config.yaml
+"""
+
 import argparse
 import logging
 import shutil
@@ -10,8 +17,17 @@ from src.utils import file_ops
 logger = logging.getLogger(__name__)
 
 def ingest_data(dataset_name: str, config_path: str | Path) -> None:
-    """Ingest data based on the dataset name specified in the config."""
+    """Ingests data based on the dataset name specified in the config.
 
+    Args:
+        dataset_name (str): The name of the dataset to ingest.
+        config_path (str | Path): The path to the configuration YAML file.
+
+    Raises:
+        ValueError: If the dataset is not present in the configuration.
+        ValueError: If the dataset declares no archives to be downloaded.
+        Exception: Any error raised while copying an annotation file, logged and re-raised unchanged.
+    """
     config_path = Path(config_path).resolve()
     full_config = file_ops.load_yaml_config(config_path)
     if 'datasets' not in full_config or dataset_name not in full_config['datasets']:
@@ -20,7 +36,7 @@ def ingest_data(dataset_name: str, config_path: str | Path) -> None:
     dataset_config = full_config['datasets'][dataset_name]
 
     # Path resolution and directory setup
-    external_data_dir =  paths.EXTERNAL_DATA_DIR / dataset_name
+    external_data_dir = paths.EXTERNAL_DATA_DIR / dataset_name
     dataset_raw_dir = paths.RAW_DATA_DIR / dataset_name
 
     external_data_dir.mkdir(parents=True, exist_ok=True)
@@ -74,6 +90,7 @@ def ingest_data(dataset_name: str, config_path: str | Path) -> None:
                     raise
 
 def main() -> None:
+    """Parses the command line arguments and runs the data ingestion pipeline."""
     default_config_path = paths.CONFIG_DIR / "data_config.yaml"
 
     parser = argparse.ArgumentParser()

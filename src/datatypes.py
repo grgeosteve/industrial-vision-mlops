@@ -1,3 +1,9 @@
+"""Type aliases and pydantic contracts shared across the pipeline.
+
+Defines the class and split vocabularies read from the dataset configuration,
+and the structural models the configuration file and COCO annotation files must satisfy.
+"""
+
 from pathlib import Path
 from typing import Any, TypeAlias
 
@@ -20,9 +26,7 @@ DatasetConfigs: TypeAlias = dict[str, DatasetConfig]
 SPLIT_NAMES: tuple[str, ...] = ("train", "val", "test")
 
 class DatasetConfigModel(BaseModel):
-    """
-    Validates the DatasetConfig dictionary contains the necessary keys
-    """
+    """Validates the DatasetConfig dictionary contains the necessary keys."""
 
     # Prevents crashing when encountering extra information
     model_config = {"extra": "allow"}
@@ -35,9 +39,8 @@ class DatasetConfigModel(BaseModel):
     name: str
 
 class CocoDocument(BaseModel):
-    """
-    Top level structural contract for a COCO annotation file
-    """
+    """Top level structural contract for a COCO annotation file."""
+
     model_config = {"extra": "allow"}
     images: list[dict[str, Any]]
     categories: list[dict[str, Any]]

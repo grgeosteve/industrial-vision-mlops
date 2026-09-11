@@ -1,3 +1,9 @@
+"""COCO to YOLO conversion for object detection datasets.
+
+Converts one parsed COCO annotation file at a time into YOLO label blocks,
+and yields the source image path paired with the label blocks.
+"""
+
 import logging
 from collections.abc import Iterator
 from typing import Any
@@ -48,7 +54,7 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[dict[str, Any]]):
             self.coco_to_yolo[coco_id] = yolo_id
 
     def _index_images(self, raw_data: dict[str, Any]) -> dict[int, dict[str, Any]]:
-        """Index every image entry by id, resolving its path and dimensions.
+        """Indexes every image entry by id, resolving its path and dimensions.
 
         Args:
             raw_data (dict[str, Any]): Raw COCO annotation file data.
@@ -91,7 +97,7 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[dict[str, Any]]):
     def _index_annotations(self,
                            raw_data: dict[str, Any],
                            image_dict: dict[int, dict[str, Any]]) -> dict[int, list[dict[str, Any]]]:
-        """Group every usable annotation based on its image id.
+        """Groups every usable annotation based on its image id.
 
         Args:
             raw_data (dict[str, Any]): Raw COCO annotation file data.
@@ -154,6 +160,8 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[dict[str, Any]]):
         x, y, w, h = bbox_data.bbox
 
         # Apply the yolo conversion and bbox normalisation
+        # COCO stores [x_min, y_min, width, height] in absolute pixels.
+        # YOLO needs the bounding box centre and size as fractions of the image dimensions.
         cx = (x + w / 2.0) / imgw
         cy = (y + h / 2.0) / imgh
         w = w / imgw
@@ -219,8 +227,7 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[dict[str, Any]]):
         try:
             image_bbox_mapping = ImageBBoxMapping.model_validate(image_bbox_dict)
         except ValidationError as e:
-            raise ValueError(
-                "Invalid image bounding box mapping. Please check the image bounding box mapping.") from e
+            raise ValueError("Invalid image bounding box mapping.") from e
 
         for image_id, image_data in image_dict.items():
             if image_id in image_bbox_dict:
@@ -237,11 +244,6 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[dict[str, Any]]):
         Yields:
             tuple[str, str | None]: Image path relative to the dataset root, and its YOLO
                                     label string, or None when the image has no annotations.
-
-        Raises:
-            KeyError: If the COCO data is missing required image or annotation keys.
-            ValueError: If an image has non-positive dimensions, the annotations fail the bounding box contract,
-                        or a COCO class id has no YOLO mapping.
         """
         annotations = raw_data.get('annotations', [])
         if not annotations:

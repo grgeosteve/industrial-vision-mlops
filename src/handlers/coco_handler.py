@@ -1,3 +1,9 @@
+"""COCO format handler.
+
+Resolves annotation files from the dataset configuration, validates each against the COCO
+document contract, and delegates conversion to the configured converter.
+"""
+
 import logging
 from collections.abc import Iterator
 
@@ -13,10 +19,10 @@ class CocoFormatHandler(BaseFormatHandler):
     """Handles file discovery and loading for COCO format datasets."""
 
     def get_available_splits(self) -> list[str]:
-        """Returns a list of available splits in the dataset.
+        """Returns a list of declared splits in the dataset.
 
         Returns:
-            list[str]: A list of strings representing the available splits.
+            list[str]: The split names declared for the dataset.
 
         Raises:
             ValueError: If the configured split names are not recognised.
@@ -43,10 +49,11 @@ class CocoFormatHandler(BaseFormatHandler):
         """Processes and converts a single split into the target format.
 
         Args:
-            split_name (str): The name of the split to be converted.
+            split_name (str): The name of the split to process.
 
         Yields:
-            tuple[str, str | None]: A tuple containing the path to the image and its corresponding label if it exists.
+            tuple[str, str | None]: Image path relative to the dataset root, and its label content,
+                                    or None when the image has no annotations.
 
         Raises:
             ValueError: If the split does not appear in the dataset configuration file.

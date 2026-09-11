@@ -1,3 +1,9 @@
+"""Pre-flight checks for COCO format object detection datasets.
+
+Loads every annotation file once, then runs the structural, class, completeness, image,
+bounding box, and split leakage checks, reporting one message for every detected error.
+"""
+
 import itertools
 import logging
 import math
@@ -12,6 +18,8 @@ from src.validators.base_validator import BaseDatasetValidator
 
 logger = logging.getLogger(__name__)
 
+# Key: Split name
+# Value: Parsed COCO document, keyed by annotation file path
 SplitAnnotations = dict[str, dict[Path, dict[str, Any]]]
 
 
@@ -19,9 +27,10 @@ class CocoDatasetValidator(BaseDatasetValidator):
     """Validates a COCO format dataset before processing."""
 
     def _get_annotation_paths_by_split(self) -> dict[str, list[Path]]:
-        """
-        Resolves annotation file paths for each split from the dataset config.
-        Returns a dict of split_name -> list of absolute annotation file Paths.
+        """Resolves annotation file paths for each split from the dataset config.
+
+        Returns:
+            dict[str, list[Path]]: Absolute annotation file paths keyed by split name.
         """
         anno_dir_name = (self.dataset_config.model_extra or {}).get("annotations_path", "annotations")
         anno_dir = self.dataset_raw_dir / anno_dir_name
@@ -38,6 +47,11 @@ class CocoDatasetValidator(BaseDatasetValidator):
         return result
 
     def _run_checks(self) -> list[str]:
+        """Runs every COCO check, aborting before them if any annotation file failed to load.
+
+        Returns:
+            list[str]: One message per detected error, empty if the dataset is valid.
+        """
         logger.info(f"Running checks for {self.dataset_config.name} dataset...")
 
         split_annotations, load_errors = self._load_annotations_by_split()
@@ -61,8 +75,12 @@ class CocoDatasetValidator(BaseDatasetValidator):
         return errors
 
     def _load_annotations_by_split(self) -> tuple[SplitAnnotations, list[str]]:
-        """Load every annotation file exactly once. Returns the parsed data per split
-        and any load errors; a non-empty error list aborts validation before the checks."""
+        """Loads every annotation file exactly once.
+
+        Returns:
+            tuple[SplitAnnotations, list[str]]: The parsed annotation data per split,
+                                                and any load errors encountered.
+        """
         error_prefix = self._check_name()
         errors = []
         split_annotations: SplitAnnotations = {}
@@ -76,6 +94,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                     if not isinstance(anno_data, dict):
                         errors.append(f"{error_prefix}: Annotation file {anno_fpath} loaded, but returned a {type(anno_data).__name__}. Expected a dict.")
                     else:
+                        # Validated for structure only - the raw dict is what the checks consume
                         _ = CocoDocument(**anno_data)
                         split_annotations[split][anno_fpath] = anno_data
                 except ValidationError as e:
@@ -86,8 +105,11 @@ class CocoDatasetValidator(BaseDatasetValidator):
         return split_annotations, errors
 
     def _extract_config_class_mapping(self) -> dict[str, int]:
-        """Extract the class mapping from the dataset config file."""
+        """Extracts the class mapping from the dataset config file.
 
+        Returns:
+            dict[str, int]: COCO ids keyed by class name, omitting classes with no 'coco_id'.
+        """
         classes = self.dataset_config.classes
         class_mapping = {}
         for class_name, ids in classes.items():
@@ -102,10 +124,18 @@ class CocoDatasetValidator(BaseDatasetValidator):
 
 
     def _check_annotation_structure(self, split_annotations: SplitAnnotations) -> list[str]:
-        """Check that each annotation file has non-empty images and categories.
-        Non-empty annotations are required for train and val splits only -
-        test splits may have no annotations key or an empty annotations list."""
+        """Checks that each annotation file has non-empty images and categories.
 
+        Non-empty annotations are required for train and val splits only -
+        test splits may have no annotations key or an empty annotations list.
+
+        Args:
+            split_annotations (SplitAnnotations): Parsed COCO documents keyed by split name,
+                                                  then by annotation file path.
+
+        Returns:
+            list[str]: One message per detected error, empty if the check passes.
+        """
         error_prefix = self._check_name()
         logger_prefix = error_prefix
         errors = []
@@ -148,8 +178,15 @@ class CocoDatasetValidator(BaseDatasetValidator):
         return errors
 
     def _check_class_consistency(self, split_annotations: SplitAnnotations) -> list[str]:
-        """Check that all annotation files define identical class id/name pairs."""
+        """Checks that all annotation files define identical class id/name pairs.
 
+        Args:
+            split_annotations (SplitAnnotations): Parsed COCO documents keyed by split name,
+                                                  then by annotation file path.
+
+        Returns:
+            list[str]: One message per detected error, empty if the check passes.
+        """
         error_prefix = self._check_name()
         logger_prefix = error_prefix
         errors = []
@@ -173,6 +210,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                     logger.warning(f"{logger_prefix}: Malformed 'categories' entries in {anno_fpath}. Skipping class comparison for this file.")
                     continue
 
+                # Cast to str: ids may differ in type between files, which would make tuple comparison raise.
                 class_dict[anno_fpath] = sorted(classes, key=lambda c: (str(c[0]), str(c[1])))
 
         if class_dict:
@@ -189,8 +227,15 @@ class CocoDatasetValidator(BaseDatasetValidator):
         return errors
 
     def _check_class_mapping_coverage(self, split_annotations: SplitAnnotations) -> list[str]:
-        """Check strict full class coverage between class config mapping and categories present in the annotation files."""
+        """Checks strict full class coverage between class config mapping and categories present in the annotation files.
 
+        Args:
+            split_annotations (SplitAnnotations): Parsed COCO documents keyed by split name,
+                                                  then by annotation file path.
+
+        Returns:
+            list[str]: One message per detected error, empty if the check passes.
+        """
         error_prefix = self._check_name()
         logger_prefix = error_prefix
         errors = []
@@ -241,9 +286,15 @@ class CocoDatasetValidator(BaseDatasetValidator):
 
 
     def _check_annotation_completeness(self, split_annotations: SplitAnnotations) -> list[str]:
-        """Check unique image IDs, unique annotation IDs, unique image paths,
-        all images annotated, and no orphaned annotation references."""
+        """Checks image and annotation id uniqueness, image path uniqueness, image coverage, and no orphaned references.
 
+        Args:
+            split_annotations (SplitAnnotations): Parsed COCO documents keyed by split name,
+                                                  then by annotation file path.
+
+        Returns:
+            list[str]: One message per detected error, empty if the check passes.
+        """
         error_prefix = self._check_name()
         logger_prefix = error_prefix
         errors = []
@@ -353,10 +404,15 @@ class CocoDatasetValidator(BaseDatasetValidator):
         return errors
 
     def _check_image_dimensions(self, split_annotations: SplitAnnotations) -> list[str]:
-        """Check that all image dimensions in the annotation files are valid
+        """Checks that every image declares a positive integer width and height.
 
-        Check that all image width and height are present, have integer values and are greater than 0"""
+        Args:
+            split_annotations (SplitAnnotations): Parsed COCO documents keyed by split name,
+                                                  then by annotation file path.
 
+        Returns:
+            list[str]: One message per detected error, empty if the check passes.
+        """
         error_prefix = self._check_name()
         logger_prefix = error_prefix
         errors = []
@@ -387,6 +443,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                         errors.append(f"{error_prefix}: Error in {anno_fpath}. Image with 'id'={image_id} has no 'width' and/or 'height'")
                         continue
 
+                    # bool is a subclass of int, so it must be excluded explicitly
                     if not all(isinstance(v, int) and not isinstance(v, bool) for v in (width, height)):
                         errors.append(f"{error_prefix}: Error in {anno_fpath}. Image with 'id'={image_id} has non-integer values for 'width' or 'height'")
                         continue
@@ -402,9 +459,17 @@ class CocoDatasetValidator(BaseDatasetValidator):
         return errors
 
     def _check_split_filename_uniqueness(self, split_annotations: SplitAnnotations) -> list[str]:
-        """Check that no two annotation files within the same split reference the same filename.
-        Prevents silent image overwrites when multiple annotation files exist per split."""
+        """Checks that no two annotation files within the same split reference the same filename.
 
+        Prevents silent image overwrites when multiple annotation files exist per split.
+
+        Args:
+            split_annotations (SplitAnnotations): Parsed COCO documents keyed by split name,
+                                                  then by annotation file path.
+
+        Returns:
+            list[str]: One message per detected error, empty if the check passes.
+        """
         error_prefix = self._check_name()
         logger_prefix = error_prefix
         errors = []
@@ -458,8 +523,15 @@ class CocoDatasetValidator(BaseDatasetValidator):
         return errors
 
     def _check_missing_images(self, split_annotations: SplitAnnotations) -> list[str]:
-        """Check that every image path referenced in the annotation files exists on disk."""
+        """Checks that every image path referenced in the annotation files exists on disk.
 
+        Args:
+            split_annotations (SplitAnnotations): Parsed COCO documents keyed by split name,
+                                                  then by annotation file path.
+
+        Returns:
+            list[str]: One message per detected error, empty if the check passes.
+        """
         error_prefix = self._check_name()
         logger_prefix = error_prefix
         errors = []
@@ -509,10 +581,18 @@ class CocoDatasetValidator(BaseDatasetValidator):
         return errors
 
     def _check_bbox_validity(self, split_annotations: SplitAnnotations) -> list[str]:
-        """Check that no bounding box has zero or negative width or height.
-        Scoped to detection format only - checks the bbox field exclusively.
-        Segmentation keys are ignored and bbox inference from segmentation masks is out of scope."""
+        """Checks that no bounding box has zero or negative width or height.
 
+        Scoped to detection format only - checks the bbox field exclusively.
+        Segmentation keys are ignored and bbox inference from segmentation masks is out of scope.
+
+        Args:
+            split_annotations (SplitAnnotations): Parsed COCO documents keyed by split name,
+                                                  then by annotation file path.
+
+        Returns:
+            list[str]: One message per detected error, empty if the check passes.
+        """
         error_prefix = self._check_name()
         logger_prefix = error_prefix
         errors = []
@@ -545,6 +625,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                         errors.append(f"{error_prefix}: Error in {anno_fpath}. bbox for annotation 'id' {annotation_id} is malformed, expected [x, y, width, height]: {bbox}")
                         continue
 
+                    # bool is a subclass of int, so it must be excluded explicitly
                     if not all(isinstance(v, (int, float)) and not math.isnan(v) and not isinstance(v, bool) for v in bbox):
                         errors.append(f"{error_prefix}: Error in {anno_fpath}. bbox for annotation 'id' {annotation_id} has non-numeric values: {bbox}")
                         continue
@@ -561,8 +642,15 @@ class CocoDatasetValidator(BaseDatasetValidator):
         return errors
 
     def _check_data_leakage(self, split_annotations: SplitAnnotations) -> list[str]:
-        """Check that no image appears in more than one split."""
+        """Checks that no image appears in more than one split.
 
+        Args:
+            split_annotations (SplitAnnotations): Parsed COCO documents keyed by split name,
+                                                  then by annotation file path.
+
+        Returns:
+            list[str]: One message per detected error, empty if the check passes.
+        """
         error_prefix = self._check_name()
         logger_prefix = error_prefix
         errors = []

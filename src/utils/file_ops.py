@@ -1,3 +1,9 @@
+"""Filesystem helpers for configuration loading, archive extraction and downloads.
+
+Archive extraction is path-traversal safe: every member is resolved and checked against
+the destination directory before anything is written.
+"""
+
 import json
 import logging
 import tarfile
@@ -12,15 +18,35 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 def is_safe_path(base_dir: str | Path, target_path: str | Path) -> bool:
-    """Ensures that target_dir is a subdirectory of base_dir to prevent path traversal."""
+    """Reports whether target_path resolves inside base_dir, to prevent path traversal.
+
+    Both paths are resolved before comparison, so symlinks are followed.
+
+    Args:
+        base_dir (str | Path): The directory the target must stay within.
+        target_path (str | Path): The path to test.
+
+    Returns:
+        bool: True if target_path is inside base_dir, False otherwise.
+    """
     base_path = Path(base_dir).resolve()
     target_path = Path(target_path).resolve()
 
     return target_path.is_relative_to(base_path)
 
 def load_yaml_config(config_path: str | Path) -> dict[str, Any]:
-    """Load configuration from a YAML file."""
+    """Loads configuration from a YAML file.
 
+    Args:
+        config_path (str | Path): The path to the YAML file to load.
+
+    Returns:
+        dict[str, Any]: The parsed configuration mapping.
+
+    Raises:
+        ValueError: If the file does not parse as YAML.
+        ValueError: If the parsed document is not a mapping.
+    """
     config_path = Path(config_path).resolve()
 
     try:
@@ -36,8 +62,7 @@ def load_yaml_config(config_path: str | Path) -> dict[str, Any]:
         raise ValueError(f"Error parsing YAML configuration file: {config_path}") from e
 
 def load_json_config(file_path: str | Path) -> dict[str, Any] | list[Any]:
-    """
-    Safely loads a JSON config file and handles common errors.
+    """Safely loads a JSON config file and handles common errors.
 
     Args:
         file_path (str | Path): The path to the JSON file to load.
@@ -46,9 +71,9 @@ def load_json_config(file_path: str | Path) -> dict[str, Any] | list[Any]:
         dict[str, Any] | list[Any]: The loaded JSON data as a dictionary or list.
 
     Raises:
-        ValueError: If the JSON file has an invalid format.
+        ValueError: If the file does not parse as JSON.
+        ValueError: If the parsed document is neither a dict nor a list.
     """
-
     file_path = Path(file_path).resolve()
     try:
         with open(file_path, encoding='utf-8') as f:
@@ -63,8 +88,15 @@ def load_json_config(file_path: str | Path) -> dict[str, Any] | list[Any]:
         raise ValueError(f"Invalid JSON format in file: {file_path}") from e
 
 def secure_zip_extract(archive_path: str | Path, dest_dir: str | Path) -> None:
-    """Extract a ZIP archive securely to prevent path traversal."""
+    """Extracts a ZIP archive securely rejecting content that escapes the destination directory.
 
+    Args:
+        archive_path (str | Path): The ZIP archive to extract.
+        dest_dir (str | Path): The directory to extract into.
+
+    Raises:
+        PermissionError: If any of the contents resolves outside dest_dir.
+    """
     archive_path = Path(archive_path).resolve()
     dest_dir = Path(dest_dir).resolve()
 
@@ -78,8 +110,16 @@ def secure_zip_extract(archive_path: str | Path, dest_dir: str | Path) -> None:
         zip_ref.extractall(dest_dir)
 
 def secure_tar_extract(archive_path: str | Path, dest_dir: str | Path) -> None:
-    """Extract a TAR archive securely to prevent path traversal."""
+    """Extracts a TAR archive securely rejecting content that escapes the destination directory.
 
+    Args:
+        archive_path (str | Path): The TAR archive to extract.
+        dest_dir (str | Path): The directory to extract into.
+
+    Raises:
+        PermissionError: If any of the contents is a symbolic or hard link.
+        PermissionError: If any of the contents resolves outside dest_dir.
+    """
     archive_path = Path(archive_path).resolve()
     dest_dir = Path(dest_dir).resolve()
 
@@ -96,8 +136,15 @@ def secure_tar_extract(archive_path: str | Path, dest_dir: str | Path) -> None:
         tar.extractall(dest_dir)
 
 def extract_archive(archive_path: str | Path, extract_path: str | Path) -> None:
-    """Extract an archive file to the specified path."""
+    """Extracts an archive file to the specified path, skipping if the destination is populated.
 
+    Args:
+        archive_path (str | Path): The archive to extract.
+        extract_path (str | Path): The directory to extract into.
+
+    Raises:
+        ValueError: If the archive is neither a TAR nor a ZIP file.
+    """
     archive_path = Path(archive_path).resolve()
     extract_path = Path(extract_path).resolve()
 
@@ -116,8 +163,12 @@ def extract_archive(archive_path: str | Path, extract_path: str | Path) -> None:
         logger.info(f"Extracted data already exists at {extract_path}. Skipping extraction.")
 
 def download_data(url: str, destination_path: str | Path) -> None:
-    """Download data from a URL and save it to the specified path."""
+    """Downloads data from a URL to a specified path, skipping if the file already exists.
 
+    Args:
+        url (str): The URL to download.
+        destination_path (str | Path): The destination path.
+    """
     destination_path = Path(destination_path).resolve()
     destination_path.parent.mkdir(parents=True, exist_ok=True)
     if destination_path.exists():

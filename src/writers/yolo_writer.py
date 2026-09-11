@@ -1,3 +1,10 @@
+"""YOLO dataset writer.
+
+Writes images and labels under images/<split> and labels/<split>, then writes the
+top-level dataset.yaml configuration file holding centralised
+dataset information in YOLO datasets.
+"""
+
 import logging
 import shutil
 from pathlib import Path
@@ -13,14 +20,11 @@ class YoloWriter(BaseDatasetWriter):
     """Writes converted image and label pairs into a YOLO dataset directory structure."""
 
     def __init__(self, output_dir: Path, class_mapping: ClassConfigMapping) -> None:
-        """Prepares the writer for a YOLO dataset at the given output directory.
+        """Prepares the writer for a YOLO dataset at the given output directory and the dataset class mapping.
 
         Args:
             output_dir (Path): Root directory for the processed YOLO dataset.
             class_mapping (ClassConfigMapping): Class names mapped to their COCO and YOLO ids.
-
-        Raises:
-            ValueError: If a class does not have a YOLO id.
         """
         super().__init__(output_dir, class_mapping)
 
@@ -85,7 +89,7 @@ class YoloWriter(BaseDatasetWriter):
             if label_target.exists():
                 raise FileExistsError(f"Target label file already exists: {label_target}")
 
-            # Copy image first
+            # Copy image first. The label write below unlinks this image file on failure.
             shutil.copy2(source_img_path, img_target)
 
             if split_name != 'test' and label_content:
@@ -97,6 +101,8 @@ class YoloWriter(BaseDatasetWriter):
                     img_target.unlink(missing_ok=True)
                     raise
 
+        # FileExistsError, FileNotFoundError and PermissionError are all OSError subclasses,
+        # so they must be caught before the OSError clause or they would be rewrapped as RuntimeError.
         except FileExistsError:
             raise
         except (FileNotFoundError, PermissionError) as e:
@@ -135,7 +141,7 @@ class YoloWriter(BaseDatasetWriter):
         Validates that every declared split exists on disk and that a train split is present.
 
         Args:
-            splits_present (list[str]): A list of split names present in the dataset.
+            splits_present (list[str]): The split names present in the dataset.
 
         Raises:
             RuntimeError: If no splits were processed.

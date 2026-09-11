@@ -1,9 +1,21 @@
+"""Project directory paths, anchored to the repository root.
+
+Resolves PROJECT_ROOT by walking up from this file to the directory containing
+pyproject.toml, then derives every data, config and log directory from it.
+"""
+
 from pathlib import Path
 
 
 def _get_project_root() -> Path:
-    """Get the project root directory."""
+    """Resolves the project root by locating the directory containing pyproject.toml.
 
+    Returns:
+        Path: The first parent directory of this file that contains pyproject.toml.
+
+    Raises:
+        FileNotFoundError: If no parent directory contains pyproject.toml.
+    """
     anchor_file = "pyproject.toml"
     current_path = Path(__file__).resolve()
     for parent in current_path.parents:
