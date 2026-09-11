@@ -456,6 +456,7 @@ def test_missing_image_on_disk(make_validator: MakeValidator, tmp_path: Path) ->
     (tmp_path / "images").mkdir()
     (tmp_path / "images" / "a.jpg").touch()  # a.jpg present, b.jpg absent
     errors = v._check_missing_images(wrap(coco))
+    assert len(errors) == 1
     assert any("for image_id 2 does not exist" in e for e in errors)
 
 def test_check_missing_images_clean(make_validator: MakeValidator, tmp_path: Path) -> None:

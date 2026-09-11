@@ -42,8 +42,8 @@ stages:
       nfiles: 3
     - path: src/validators
       hash: md5
-      md5: b3d8baad234d207716f3339a04989f69.dir
-      size: 39010
+      md5: 1c8c625499585a9f8cf330b241eb4d0a.dir
+      size: 38869
       nfiles: 3
     - path: src/writers
       hash: md5

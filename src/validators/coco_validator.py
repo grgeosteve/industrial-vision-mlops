@@ -555,7 +555,6 @@ class CocoDatasetValidator(BaseDatasetValidator):
                         missing_images.append(path)
 
                 if len(missing_images) > 0:
-                    errors.append(f"{error_prefix}: Missing image summary for {anno_fpath}: {len(missing_images)} image files do not exist")
                     logger.warning(f"{logger_prefix}: {len(missing_images)} image files from {anno_fpath} do not exist. See log for details.")
 
         self._log_check_completion(logger_prefix, errors)
