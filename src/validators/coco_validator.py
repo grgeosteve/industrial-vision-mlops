@@ -122,6 +122,17 @@ class CocoDatasetValidator(BaseDatasetValidator):
 
         return class_mapping
 
+    def _log_check_completion(self, check_name: str, errors: list[str]) -> None:
+        """Logs the outcome of one check.
+
+        Args:
+            check_name (str): The name of the check the message is reported under.
+            errors (list[str]): The errors the check collected.
+        """
+        if len(errors) == 0:
+            logger.info(f"{check_name}: Completed validation of {self.dataset_config.name} dataset without errors.")
+        else:
+            logger.info(f"{check_name}: Completed validation of {self.dataset_config.name} dataset with {len(errors)} errors.")
 
     def _check_annotation_structure(self, split_annotations: SplitAnnotations) -> list[str]:
         """Checks that each annotation file has non-empty images and categories.
@@ -170,11 +181,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                     elif len(annotations) == 0:
                         errors.append(f"{error_prefix}: Invalid format for COCO format annotation file: {anno_fpath}. 'annotations' field for split {split} is empty.")
 
-        if len(errors) == 0:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset without errors.")
-        else:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset with {len(errors)} errors.")
-
+        self._log_check_completion(logger_prefix, errors)
         return errors
 
     def _check_class_consistency(self, split_annotations: SplitAnnotations) -> list[str]:
@@ -219,11 +226,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                 if classes != comparison_classes:
                     errors.append(f"{error_prefix}: {anno_fpath} has different classes than {comparison_classes}")
 
-        if len(errors) == 0:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset without errors.")
-        else:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset with {len(errors)} errors.")
-
+        self._log_check_completion(logger_prefix, errors)
         return errors
 
     def _check_class_mapping_coverage(self, split_annotations: SplitAnnotations) -> list[str]:
@@ -277,13 +280,8 @@ class CocoDatasetValidator(BaseDatasetValidator):
                 for cls, (config_id, anno_id) in id_mismatches.items():
                     errors.append(f"{error_prefix}: Class ID mismatch between config and annotations: {cls}: {config_id} (config) vs {anno_id} (annotations)")
 
-        if len(errors) == 0:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset without errors.")
-        else:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset with {len(errors)} errors.")
-
+        self._log_check_completion(logger_prefix, errors)
         return errors
-
 
     def _check_annotation_completeness(self, split_annotations: SplitAnnotations) -> list[str]:
         """Checks image and annotation id uniqueness, image path uniqueness, image coverage, and no orphaned references.
@@ -396,11 +394,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                     orphaned_image_ids = annotated_image_set.difference(image_ids)
                     errors.append(f"{error_prefix}: ORPHANED IMAGE REFERENCES: {len(orphaned_image_ids)} images in {anno_fpath} are referenced by annotations but are not present in the 'images' list: {orphaned_image_ids}")
 
-        if len(errors) == 0:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset without errors.")
-        else:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset with {len(errors)} errors.")
-
+        self._log_check_completion(logger_prefix, errors)
         return errors
 
     def _check_image_dimensions(self, split_annotations: SplitAnnotations) -> list[str]:
@@ -451,11 +445,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                     if width <= 0 or height <= 0:
                         errors.append(f"{error_prefix}: Error in {anno_fpath}. Image with 'id'={image_id} has non-positive width or height")
 
-        if len(errors) == 0:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset without errors.")
-        else:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset with {len(errors)} errors.")
-
+        self._log_check_completion(logger_prefix, errors)
         return errors
 
     def _check_split_filename_uniqueness(self, split_annotations: SplitAnnotations) -> list[str]:
@@ -514,12 +504,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                     else:
                         split_filename_dict[filename] = {'annotation_file': anno_fname, 'image_id': image_id, 'image_path': path}
 
-
-        if len(errors) == 0:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset without errors.")
-        else:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset with {len(errors)} errors.")
-
+        self._log_check_completion(logger_prefix, errors)
         return errors
 
     def _check_missing_images(self, split_annotations: SplitAnnotations) -> list[str]:
@@ -573,11 +558,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                     errors.append(f"{error_prefix}: Missing image summary for {anno_fpath}: {len(missing_images)} image files do not exist")
                     logger.warning(f"{logger_prefix}: {len(missing_images)} image files from {anno_fpath} do not exist. See log for details.")
 
-        if len(errors) == 0:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset without errors.")
-        else:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset with {len(errors)} errors.")
-
+        self._log_check_completion(logger_prefix, errors)
         return errors
 
     def _check_bbox_validity(self, split_annotations: SplitAnnotations) -> list[str]:
@@ -634,11 +615,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                     if width <= 0 or height <= 0:
                         errors.append(f"{error_prefix}: Error in {anno_fpath}. bbox for annotation 'id' {annotation_id} has non-positive width or height: {bbox}")
 
-        if not errors:
-            logger.info(f"{logger_prefix}: Bounding box validity check completed for dataset {self.dataset_config.name} without errors.")
-        else:
-            logger.info(f"{logger_prefix}: Bounding box validity check completed for dataset {self.dataset_config.name} with {len(errors)} errors.")
-
+        self._log_check_completion(logger_prefix, errors)
         return errors
 
     def _check_data_leakage(self, split_annotations: SplitAnnotations) -> list[str]:
@@ -694,9 +671,5 @@ class CocoDatasetValidator(BaseDatasetValidator):
                 errors.append(f"{error_prefix}: Error: Data leakage detected between splits {split} and {other_split}. Overlapping images: {overlap}.")
                 logger.warning(f"{logger_prefix}: Data leakage detected between splits {split} and {other_split}. Number of overlapping images: {len(overlap)}.")
 
-        if len(errors) == 0:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset without errors.")
-        else:
-            logger.info(f"{logger_prefix}: Completed validation of {self.dataset_config.name} dataset with {len(errors)} errors.")
-
+        self._log_check_completion(logger_prefix, errors)
         return errors
