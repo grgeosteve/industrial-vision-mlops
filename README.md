@@ -1,5 +1,7 @@
 # Vision MLOps for Industrial Datasets
 
+![gates](https://github.com/grgeosteve/industrial-vision-mlops/actions/workflows/gates.yml/badge.svg)
+
 An end-to-end MLOps pipeline applied to automated object detection in logistics environments (LOCO dataset).
 
 While real-time industrial computer vision is typically deployed on the Edge for low latency, **this project explicitly focuses on a Cloud-Native Microservices architecture.** It simulates a centralised, asynchronous inference API designed for batch-processing warehouse footage, facility dashboarding, and digital-twin integration. 
@@ -16,40 +18,75 @@ This project demonstrates data engineering, strict dependency isolation, reprodu
 ## Architecture
 This project separates the ML lifecycle into strictly versioned phases:
 
-1. **Data Ingestion:** Automated fetching and validating of raw datasets.
-2. **Data Processing:** (In Progress) Conversion of COCO dataset to normalised YOLO format and EDA
-3. **Model Training:** (Planned)
-4. **Deployment:** (Planned)
+1. **Data Ingestion:** Automated fetching and secure extraction of raw datasets.
+2. **Data Processing:** Pre-flight validation and conversion of COCO dataset to YOLO format and EDA.
+3. **Model Training:** (In progress)
+4. **Deployment:** (In progress)
+
+## Pipeline Design
+Each stage of the pipeline is defined by an abstract base class. Supporting a new source or target format means implementing a new interface:
+
+| Contract | Responsibility | Current implementation |
+| --- | --- | --- |
+| `BaseFormatHandler` | Discovers annotation files per split and loads them | `CocoFormatHandler` |
+| `BaseAnnotationConverter` | Converts one annotation file into image path and label pairs | `CocoToYoloDetectionConverter` |
+| `BaseDatasetWriter` | Writes images, labels, and format metadata to disk | `YoloWriter` |
+| `BaseDatasetValidator` | Runs the pre-flight checks for a source format | `CocoDatasetValidator` |
+
+### Pre-flight Validation
+The dataset is validated before any file is written to disk. The validator collects all check failures instead of immediately aborting, writes them to `logs/validation.log`, and stops the pipeline if any are found:
+
+1. **Annotation structure:** `images` and `categories` present and non-empty; non-test splits declare annotations
+2. **Class consistency:** every annotation file defines identical class id/name pairs
+3. **Class mapping coverage:** the configured class mapping and the annotation categories match exactly
+4. **Annotation completeness:** unique image and annotation ids, unique image paths, every image annotated, no orphaned annotation references
+5. **Image dimensions:** every image declares a positive integer width and height
+6. **Filename uniqueness:** no two annotation files within a split reference the same output filename (LOCO includes multiple annotation files per split)
+7. **Missing images:** every referenced image path exists on disk
+8. **Bounding box validity:** four numeric coordinates with positive width and height
+9. **Data leakage:** no image appears in more than one split
+
+**Note:** This validation suite describes the current COCO implementation.
 
 ## Repository Structure
 
 ```text
-├── configs/                 # YAML configuration files
-│   └── data_config.yaml     # Dataset ingestion and processing settings
+├── .github/
+│   └── workflows/
+│       └── gates.yml        # CI gates: ruff, mypy, and the unit suite
+├── configs/                 # Dataset ingestion and processing settings
 ├── data/
 │   ├── external/            # Data from third party sources (Git-ignored)
 │   ├── processed/           # Normalised YOLO format data (Git-ignored)
 │   └── raw/                 # Original COCO datasets (Git-ignored)
+├── dvc.lock                 # Resolved stage dependency and output hashes
+├── dvc.yaml                 # DVC pipeline stage definitions
 ├── init_mlops.sh            # Environment and tracking initialisation script
 ├── LICENSE
 ├── models/                  # Trained models, ONNX exports, and model summaries
 ├── notebooks/               # Sandboxed Exploratory Data Analysis (EDA)
-├── pyproject.toml           # Project metadata and build configuration
+├── pyproject.toml           # Project metadata, ruff and mypy configuration
 ├── README.md                # Project documentation
 ├── requirements-base-dev.txt# Testing, typing, and EDA dependencies
 ├── requirements-base.txt    # Core dependencies for data engineering pipeline
 ├── src/                     # Production-ready pipeline source code
 │   ├── api/                 # Microservice deployment code (FastAPI)
+│   ├── converters/          # Annotation conversion logic (e.g., COCO to YOLO)
 │   ├── data/                # Data ingestion and processing orchestrators
-│   │   └── ingest_data.py
+│   │   ├── ingest_data.py
+│   │   └── process_dataset.py
+│   ├── datatypes.py         # Shared type aliases and pydantic contracts
+│   ├── handlers/            # Source format file discovery and loading
 │   ├── models/              # Model training and evaluation scripts
-│   ├── parsers/             # Agnostic conversion logic (e.g., COCO to YOLO)
 │   ├── paths.py             # Global path definitions
-│   └── utils/               # Shared helper functions
-│       └── file_ops.py
+│   ├── utils/               # Shared helper functions
+│   │   ├── coco_ops.py
+│   │   └── file_ops.py
+│   ├── validators/          # Pre-flight dataset validation
+│   └── writers/             # Target format dataset writers
 └── tests/                   # Pytest suite
-    ├── integration/         # Pipeline and API integration tests
-    └── unit/                # Utility and parser unit tests
+    ├── integration/         # Live DagsHub / MLflow integration tests
+    └── unit/                # Unit tests, mirroring the src/ package layout
 ```
 
 ## Stage 1: Environment Setup 
@@ -98,14 +135,14 @@ This project separates the ML lifecycle into strictly versioned phases:
 
 ## Stage 2: Data Acquisition & Processing
 ### Data Retrieval (Default)
-Because the raw data is version-controlled as an immutable artifact, you do not need to download it manually. Once your `.env` and DagsHub remote are configured via `init_mlops.sh`, simply pull the data:
+The raw data is version-controlled as an immutable artifact and is retrieved from the project's DVC remote. `init_mlops.sh` configures that remote from the values in `.env`.
 
 ```bash
-    dvc pull
+dvc pull
 ```
 
-### Manual Data Ingestion (Admin Only)
-*If you are updating the dataset or rebuilding the DVC pipeline from scratch, you can trigger the raw ingestion script. This downloads the LOCO dataset directly from the TUM servers.*
+### Manual Data Ingestion (Rebuild from Source)
+*The raw ingestion script rebuilds the dataset from scratch, downloading LOCO directly from the TUM servers. This is the route taken when updating the dataset or rebuilding the DVC pipeline.*
 
 *Credits to the TUM team for creating and supplying the dataset in their repository:* https://github.com/tum-fml/loco
 
@@ -114,8 +151,27 @@ Because the raw data is version-controlled as an immutable artifact, you do not 
 >IEEE International Conference on Machine Learning and Applications (ICMLA) 2020
 
 ```bash
-    python src/data/ingest_data.py --dataset loco --config configs/data_config.yaml
+python -m src.data.ingest_data --dataset loco --config configs/data_config.yaml
 ```
+
+### Data Processing
+The COCO to YOLO conversion runs a pre-flight validation pass over the raw dataset, and an inconsistent dataset fails before any output is written. The conversion is declared as a DVC stage (`process_loco`) in `dvc.yaml`.
+
+Reproduce the stage from its tracked dependencies:
+
+```bash
+dvc repro
+```
+
+Or invoke the converter directly, bypassing DVC:
+
+```bash
+python -m src.data.process_dataset --dataset loco --config configs/data_config.yaml
+```
+
+The LOCO run produces 2820 training and 2277 validation image-label pairs across 5 classes, along with a root configuration file used by YOLO (`dataset.yaml`).
+
+Validation errors are written to `logs/validation.log`. Progress and warnings go to the terminal.
 
 ### Exploratory Data Analysis (EDA)
 All exploratory notebooks are isolated in the `notebooks/` directory to prevent environment pollution. To run the EDA notebooks, ensure you have installed the development dependencies using `requirements-base-dev.txt`.
@@ -123,18 +179,38 @@ All exploratory notebooks are isolated in the `notebooks/` directory to prevent 
 From within the conda environment launch `marimo`:
 
 ```bash
-    marimo edit notebooks/01_EDA_raw_loco.py
+marimo edit notebooks/01_EDA_raw_loco.py
 ```
 
 ## Testing
-Unit and pipeline integration tests have been built to verify the correct execution of the utility functions, API integration, and processing logic.
+Unit and pipeline integration tests have been built to verify the correct execution of the utility functions, experiment tracking, and processing logic.
 
-Additionally, `mypy` is used for ensuring typing adherence.
+Additionally, `mypy` is used for ensuring typing adherence and `ruff` for linting and import sorting. Both tools are configured in `pyproject.toml`. All three quality gates are integrated into a CI pipeline and run on every push and pull request via GitHub Actions.
 
 ```bash
+# Lint and verify import sorting
+ruff check src/ tests/
+
+# Apply safe automatic fixes (import sorting, etc.)
+ruff check --fix src/ tests/
+
 # Verify strict typing
 mypy src/ tests/
 
-# Perform unit and integration tests
-pytest tests/ -v
+# Run the unit test suite
+pytest tests/unit
+```
+
+Every project data directory and the validation log path are redirected into a temporary directory for the duration of each unit test, so the suite never reads or writes to the real `data/` or `logs/` directories. All outbound requests are mocked, so no test touches the network.
+
+The integration suite connects to the live DagsHub MLflow server and is only run manually:
+
+```bash
+pytest tests/integration
+```
+
+Unit test branch coverage is measured with `pytest-cov` and currently sits at **92%** across `src/`:
+
+```bash
+pytest tests/unit --cov=src --cov-branch --cov-report=term-missing
 ```
