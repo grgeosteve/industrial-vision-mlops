@@ -305,6 +305,8 @@ class CocoDatasetValidator(BaseDatasetValidator):
             for anno_fpath, data in annotation_data.items():
                 logger.info(f"{logger_prefix}: {split} | Checking annotation file {anno_fpath}...")
 
+                image_root = coco_ops.get_image_root(self.dataset_config.model_extra, anno_fpath.name)
+
                 images = data.get('images', [])
                 if not images:
                     # This is not handled as an error. This check is beyond the scope of this validator
@@ -326,7 +328,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                     else:
                         image_ids.add(image_id)
 
-                    rel_path = coco_ops.resolve_image_relpath(image)
+                    rel_path = coco_ops.resolve_image_relpath(image, image_root)
                     if rel_path is None:
                         errors.append(f"{error_prefix}: Error in {anno_fpath}. Image path for image_id {image_id} is missing.")
                         continue
@@ -474,6 +476,8 @@ class CocoDatasetValidator(BaseDatasetValidator):
             for anno_fpath, data in annotation_data.items():
                 logger.info(f"{logger_prefix}: {split} | Checking annotation file {anno_fpath}...")
 
+                image_root = coco_ops.get_image_root(self.dataset_config.model_extra, anno_fpath.name)
+
                 images = data.get('images', [])
                 if not images:
                     # This is not handled as an error. This check is beyond the scope of this validator
@@ -485,7 +489,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                         errors.append(f"{error_prefix}: Error in {anno_fpath}. image_id is missing.")
                         continue
 
-                    rel_path = coco_ops.resolve_image_relpath(image)
+                    rel_path = coco_ops.resolve_image_relpath(image, image_root)
                     if rel_path is None:
                         logger.warning(f"{logger_prefix}: Error in {anno_fpath}. Image path for image_id {image_id} is missing.")
                         continue
@@ -530,6 +534,8 @@ class CocoDatasetValidator(BaseDatasetValidator):
                 logger.info(f"{logger_prefix}: {split} | Checking annotation file {anno_fpath}...")
                 missing_images = []
 
+                image_root = coco_ops.get_image_root(self.dataset_config.model_extra, anno_fpath.name)
+
                 images = data.get('images', [])
                 if not images:
                     # This is not handled as an error. This check is beyond the scope of this validator
@@ -541,7 +547,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                         logger.warning(f"{logger_prefix}: Error in {anno_fpath}. image_id is missing.")
                         continue
 
-                    rel_path = coco_ops.resolve_image_relpath(image)
+                    rel_path = coco_ops.resolve_image_relpath(image, image_root)
                     if rel_path is None:
                         # Only a warning is sent to the terminal. This error is not in the scope of this validator
                         logger.warning(f"{logger_prefix}: Error in {anno_fpath}. Image path for image_id {image_id} is missing.")
@@ -641,6 +647,8 @@ class CocoDatasetValidator(BaseDatasetValidator):
             for anno_fpath, data in annotation_data.items():
                 logger.info(f"{logger_prefix}: {split} | Checking annotation file {anno_fpath}...")
 
+                image_root = coco_ops.get_image_root(self.dataset_config.model_extra, anno_fpath.name)
+
                 images = data.get('images', [])
                 if not images:
                     # This is not handled as an error. This check is beyond the scope of this validator
@@ -652,7 +660,7 @@ class CocoDatasetValidator(BaseDatasetValidator):
                         logger.warning(f"{logger_prefix}: Error in {anno_fpath}. image_id is missing.")
                         continue
 
-                    rel_path = coco_ops.resolve_image_relpath(image)
+                    rel_path = coco_ops.resolve_image_relpath(image, image_root)
                     if rel_path is None:
                         # Skipping. This check is beyond the scope of this validator
                         logger.warning(f"{logger_prefix}: Error in {anno_fpath}. Image path for image_id {image_id} is missing. Skipping")

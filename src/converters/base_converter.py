@@ -6,6 +6,7 @@ they accept, and yield image path and label content pairs.
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Generic, TypeVar
 
 T = TypeVar('T')
@@ -14,11 +15,13 @@ class BaseAnnotationConverter(ABC, Generic[T]):
     """Abstract base class for all annotation converters."""
 
     @abstractmethod
-    def convert(self, raw_data: T) -> Iterator[tuple[str, str | None]]:
+    def convert(self, raw_data: T, image_root: Path | None = None) -> Iterator[tuple[str, str | None]]:
         """Converts one annotation file's raw data into image path and label pairs.
 
         Args:
             raw_data (T): Raw annotation data in the source format the converter handles.
+            image_root (Path | None): Directory holding the images, relative to the dataset root,
+                                      or None when the raw data carries explicit paths.
 
         Yields:
             tuple[str, str | None]: Image path relative to the dataset root, and its label

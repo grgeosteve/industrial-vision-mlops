@@ -45,7 +45,7 @@ def test_builds_class_lookup(make_converter: MakeConverter) -> None:
 # --------------------------------------------------------------------------- #
 def test_index_images_clean(make_converter: MakeConverter) -> None:
     indexed = make_converter()._index_images(valid_coco())
-    assert indexed[1] == {"path": "images/a.jpg", "height": 100, "width": 100}
+    assert indexed[1] == {"path": "a.jpg", "height": 100, "width": 100}
     assert indexed[2] == {"path": "images/b.jpg", "height": 200, "width": 200}
 
 @pytest.mark.parametrize("mutate, exception, expected", [
@@ -191,7 +191,7 @@ def test_convert_yields_paths_and_labels(make_converter: MakeConverter) -> None:
     results = list(make_converter().convert(valid_coco()))
 
     assert results == [
-        ("images/a.jpg", "0 0.25 0.4 0.3 0.4\n"),
+        ("a.jpg", "0 0.25 0.4 0.3 0.4\n"),
         ("images/b.jpg", "1 0.025 0.025 0.05 0.05\n"),
     ]
 
@@ -202,7 +202,7 @@ def test_convert_no_annotations_yields_none(make_converter: MakeConverter) -> No
     results = list(make_converter().convert(coco))
 
     assert results == [
-        ("images/a.jpg", None),
+        ("a.jpg", None),
         ("images/b.jpg", None),
     ]
 
@@ -213,7 +213,7 @@ def test_convert_unannotated_image_yields_none(make_converter: MakeConverter) ->
     results = list(make_converter().convert(coco))
 
     assert results == [
-        ("images/a.jpg", "0 0.25 0.4 0.3 0.4\n"),
+        ("a.jpg", "0 0.25 0.4 0.3 0.4\n"),
         ("images/b.jpg", None),
     ]
 

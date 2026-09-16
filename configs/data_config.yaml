@@ -35,6 +35,15 @@ datasets:
         - loco-sub1-v1-val.json
         - loco-sub4-v1-val.json
 
+    # (Optional) image directory per annotation file, relative to the extracted data path.
+    # Only needed when annotations carry 'file_name' without an explicity 'path'.
+    # image_roots:
+    #   loco-sub2-v1-train.json: dataset/subset-2
+    #   loco-sub3-v1-train.json: dataset/subset-3
+    #   loco-sub5-v1-train.json: dataset/subset-5
+    #   loco-sub1-v1-val.json: dataset/subset-1
+    #   loco-sub4-v1-val.json: dataset/subset-4
+
     # Explicit class mapping
     classes:
       small_load_carrier:

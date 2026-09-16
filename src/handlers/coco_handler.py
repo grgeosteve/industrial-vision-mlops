@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from src.datatypes import SPLIT_NAMES, CocoDocument
 from src.handlers.base_handler import BaseFormatHandler
-from src.utils import file_ops
+from src.utils import coco_ops, file_ops
 
 logger = logging.getLogger(__name__)
 
@@ -97,4 +97,6 @@ class CocoFormatHandler(BaseFormatHandler):
             elif not document.annotations:
                 raise ValueError(f"Invalid '{split_name}' COCO JSON: No 'annotations' were found.")
 
-            yield from self.converter.convert(anno_data)
+            image_root = coco_ops.get_image_root(self.dataset_config.model_extra, config)
+
+            yield from self.converter.convert(anno_data, image_root)

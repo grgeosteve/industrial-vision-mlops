@@ -6,6 +6,7 @@ and yields the source image path paired with the label blocks.
 
 import logging
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, RootModel, ValidationError
@@ -53,11 +54,13 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[CocoDict]):
 
             self.coco_to_yolo[coco_id] = yolo_id
 
-    def _index_images(self, raw_data: CocoDict) -> dict[int, dict[str, Any]]:
+    def _index_images(self, raw_data: CocoDict, image_root: Path | None = None) -> dict[int, dict[str, Any]]:
         """Indexes every image entry by id, resolving its path and dimensions.
 
         Args:
             raw_data (CocoDict): Raw COCO annotation file data.
+            image_root (Path | None): Directory holding the images, relative to the dataset
+                                      root, or None when the raw data carries explicit paths.
 
         Returns:
             dict[int, dict[str, Any]]: Image entries keyed by image id,
@@ -78,7 +81,7 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[CocoDict]):
             if image_id is None:
                 raise KeyError("Image ID is missing from raw COCO data.")
 
-            image_path = resolve_image_relpath(image)
+            image_path = resolve_image_relpath(image, image_root)
             if image_path is None:
                 raise KeyError(f"Image ID {image_id} is missing both 'path' and 'file_name' keys.")
 
@@ -195,24 +198,32 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[CocoDict]):
 
         return formatted_annotations
 
-    def _convert_no_annotations(self, raw_data: CocoDict) -> Iterator[tuple[str, str | None]]:
+    def _convert_no_annotations(self,
+                                raw_data: CocoDict,
+                                image_root: Path | None = None) -> Iterator[tuple[str, str | None]]:
         """Yields every image path with no label, for annotation-free file data.
 
         Args:
             raw_data (CocoDict): Raw COCO annotation file data.
+            image_root (Path | None): Directory holding the images, relative to the dataset
+                                      root, or None when the raw data carries explicit paths.
 
         Yields:
             tuple[str, str | None]: Image path and None, as there are no annotations to convert.
         """
-        image_dict = self._index_images(raw_data)
+        image_dict = self._index_images(raw_data, image_root)
         for image_data in image_dict.values():
             yield image_data['path'], None
 
-    def _convert_annotations(self, raw_data: CocoDict) -> Iterator[tuple[str, str | None]]:
+    def _convert_annotations(self,
+                             raw_data: CocoDict,
+                             image_root: Path | None = None) -> Iterator[tuple[str, str | None]]:
         """Yields every image path with its converted YOLO label block.
 
         Args:
             raw_data (CocoDict): Raw COCO annotation file data.
+            image_root (Path | None): Directory holding the images, relative to the dataset
+                                      root, or None when the raw data carries explicit paths.
 
         Yields:
             tuple[str, str | None]: Image path and its YOLO label string, or None if the image has no annotations.
@@ -220,7 +231,7 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[CocoDict]):
         Raises:
             ValueError: If the image bounding box mapping is invalid.
         """
-        image_dict = self._index_images(raw_data)
+        image_dict = self._index_images(raw_data, image_root)
         image_bbox_dict = self._index_annotations(raw_data, image_dict)
 
         # Validate dict against the Pydantic contract
@@ -235,11 +246,13 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[CocoDict]):
             else:
                 yield image_data['path'], None
 
-    def convert(self, raw_data: CocoDict) -> Iterator[tuple[str, str | None]]:
+    def convert(self, raw_data: CocoDict, image_root: Path | None = None) -> Iterator[tuple[str, str | None]]:
         """Converts one COCO annotation file into YOLO image path and label pairs.
 
         Args:
             raw_data (CocoDict): Raw COCO annotation file data.
+            image_root (Path | None): Directory holding the images, relative to the dataset
+                                      root, or None when the raw data carries explicit paths.
 
         Yields:
             tuple[str, str | None]: Image path relative to the dataset root, and its YOLO
@@ -247,6 +260,6 @@ class CocoToYoloDetectionConverter(BaseAnnotationConverter[CocoDict]):
         """
         annotations = raw_data.get('annotations', [])
         if not annotations:
-            yield from self._convert_no_annotations(raw_data)
+            yield from self._convert_no_annotations(raw_data, image_root)
         else:
-            yield from self._convert_annotations(raw_data)
+            yield from self._convert_annotations(raw_data, image_root)

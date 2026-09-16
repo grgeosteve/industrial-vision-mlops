@@ -6,8 +6,8 @@ stages:
     deps:
     - path: configs/data_config.yaml
       hash: md5
-      md5: 8e1b95209af7b4d3997b339d90d6c231
-      size: 1659
+      md5: dbc4c115bf1f732f4294ff0d7df03aaa
+      size: 2098
     - path: data/raw/loco
       hash: md5
       md5: 2b4fe0391c15bfe892d9a3c944d5b729.dir
@@ -15,8 +15,8 @@ stages:
       nfiles: 5598
     - path: src/converters
       hash: md5
-      md5: 6e700ef46e09622949edb377f8ba80d8.dir
-      size: 11634
+      md5: 70343ef973299e6c725142683a0bebf5.dir
+      size: 12956
       nfiles: 3
     - path: src/data/process_dataset.py
       hash: md5
@@ -24,12 +24,12 @@ stages:
       size: 9360
     - path: src/datatypes.py
       hash: md5
-      md5: af86c57ad38276b239f0c70e7d1ed2dd
-      size: 1532
+      md5: d4595f22a9b8e2820ff608e69bbf22c5
+      size: 1640
     - path: src/handlers
       hash: md5
-      md5: e3984f3e323414045499dfad77e3df64.dir
-      size: 5982
+      md5: af471b5e79c7bbcb2e812bdb9fbf75b9.dir
+      size: 6095
       nfiles: 3
     - path: src/paths.py
       hash: md5
@@ -37,13 +37,13 @@ stages:
       size: 1133
     - path: src/utils
       hash: md5
-      md5: 0f79b9ae9e33998eb6cb8ee316204141.dir
-      size: 8209
+      md5: 2b529f0f331fcb883611f04de0faccc8.dir
+      size: 9448
       nfiles: 3
     - path: src/validators
       hash: md5
-      md5: 1c8c625499585a9f8cf330b241eb4d0a.dir
-      size: 38869
+      md5: d608793900b97dac4084bfe55674510f.dir
+      size: 39333
       nfiles: 3
     - path: src/writers
       hash: md5

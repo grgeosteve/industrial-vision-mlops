@@ -31,7 +31,8 @@ SPLIT_NAMES: tuple[str, ...] = ("train", "val", "test")
 class DatasetConfigModel(BaseModel):
     """Validates the DatasetConfig dictionary contains the necessary keys."""
 
-    # Prevents crashing when encountering extra information
+    # Permits optional format-specific keys, which the matching handler and validator read
+    # from model_extra. Each source format documents the keys it recognises.
     model_config = {"extra": "allow"}
 
     classes: ClassConfigMapping

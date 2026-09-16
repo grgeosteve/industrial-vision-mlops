@@ -21,9 +21,11 @@ class _StubConverter(BaseAnnotationConverter[CocoDict]):
 
     def __init__(self) -> None:
         self.received: list[CocoDict] = []
+        self.roots: list[Path | None] = []
 
-    def convert(self, raw_data: CocoDict) -> Iterator[tuple[str, str | None]]:
+    def convert(self, raw_data: CocoDict, image_root: Path | None = None) -> Iterator[tuple[str, str | None]]:
         self.received.append(raw_data)
+        self.roots.append(image_root)
         yield YIELD_PAYLOAD
 
 @pytest.fixture
@@ -205,3 +207,17 @@ def test_process_split_test_split_without_annotations_yields(make_handler: MakeH
     assert list(handler.process_split("test")) == [YIELD_PAYLOAD]
     assert converter.received == [coco]
     assert "No annotations found" in caplog.text
+
+def test_process_split_applies_per_file_image_roots(make_handler: MakeHandler,
+                                                    write_anno: WriteAnno,
+                                                    converter: _StubConverter) -> None:
+    handler = make_handler(
+        splits={"train": ["a.json", "b.json"]},
+        image_roots={"a.json": "images/subset-a", "b.json": "images/subset-b"},
+    )
+    write_anno(fname="a.json", payload=valid_coco())
+    write_anno(fname="b.json", payload=valid_coco())
+
+    list(handler.process_split("train"))
+
+    assert converter.roots == [Path("images/subset-a"), Path("images/subset-b")]

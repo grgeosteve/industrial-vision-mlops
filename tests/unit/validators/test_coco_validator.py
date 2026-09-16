@@ -63,12 +63,11 @@ def dataset_on_disk(tmp_path: Path) -> Path:
         }
 
     (tmp_path / "annotations").mkdir()
-    (tmp_path / "images").mkdir()
 
     for split, count in (("train", 2), ("val", 1)):
         (tmp_path / "annotations" / f"{split}.json").write_text(json.dumps(_coco(split, count)))
         for i in range(1, count + 1):
-            (tmp_path / "images" / f"{split}_{i}.jpg").touch()
+            (tmp_path / f"{split}_{i}.jpg").touch()
 
     return tmp_path
 
@@ -82,7 +81,7 @@ def test_validate_passes_on_valid_dataset(make_validator: MakeValidator) -> None
     assert v.log_path.read_text() == ""  # ERROR-only handler empty
 
 def test_validate_raises_on_invalid_dataset(make_validator: MakeValidator, dataset_on_disk: Path) -> None:
-    (dataset_on_disk / "images" / "train_1.jpg").unlink()
+    (dataset_on_disk / "train_1.jpg").unlink()
     v = make_validator()
 
     with pytest.raises(DatasetValidationError):
@@ -453,8 +452,7 @@ def test_missing_image_on_disk(make_validator: MakeValidator, tmp_path: Path) ->
     }
 
     v = make_validator()
-    (tmp_path / "images").mkdir()
-    (tmp_path / "images" / "a.jpg").touch()  # a.jpg present, b.jpg absent
+    (tmp_path / "a.jpg").touch()  # a.jpg present, b.jpg absent
     errors = v._check_missing_images(wrap(coco))
     assert len(errors) == 1
     assert any("for image_id 2 does not exist" in e for e in errors)
@@ -468,7 +466,7 @@ def test_check_missing_images_clean(make_validator: MakeValidator, tmp_path: Pat
         if path is not None:
             fpath = tmp_path / Path(path)
         elif filename is not None:
-            fpath = tmp_path / "images" / filename
+            fpath = tmp_path / filename
         else:
             continue
 
