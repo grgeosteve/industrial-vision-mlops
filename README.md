@@ -180,6 +180,7 @@ From within the conda environment launch `marimo`:
 
 ```bash
 marimo edit notebooks/01_EDA_raw_loco.py
+marimo edit notebooks/02_EDA_processed_loco.py
 ```
 
 ## Testing
